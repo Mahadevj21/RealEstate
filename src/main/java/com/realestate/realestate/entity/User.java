@@ -1,25 +1,10 @@
 package com.realestate.realestate.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class User {
-
-    public enum Role {
-        ADMIN,
-        BUYER,
-        SELLER
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -27,24 +12,79 @@ public class User {
 
     private String name;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true)
     private String email;
 
-    @Column(nullable = false)
     private String password;
 
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    private boolean blocked;
+    private double balance = 0.0;
 
-    // ❤️ FAVOURITES
-    @ManyToMany
-    @JoinTable(
-        name = "favourites",
-        joinColumns = @JoinColumn(name = "buyer_id"),
-        inverseJoinColumns = @JoinColumn(name = "property_id")
-    )
-    @JsonIgnore
-    private Set<Property> favouriteProperties = new HashSet<>();
+    private boolean blocked = false;
+
+    public enum Role {
+        BUYER,
+        SELLER,
+        ADMIN
+    }
+
+    // ===== getters & setters =====
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+    
+    public void setEmail(String email) {
+        this.email = email;
+    }
+    
+    public String getPassword() {
+        return password;
+    }
+    
+    public void setPassword(String password) {
+        this.password = password;
+    }
+    
+    public Role getRole() {
+        return role;
+    }
+    
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void setBalance(double balance) {
+        this.balance = balance;
+    }
+
+    public boolean isBlocked() {
+        return blocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
+    }
 }
