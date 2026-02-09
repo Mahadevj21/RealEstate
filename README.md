@@ -27,4 +27,4 @@ A role-based real estate backend application built using **Spring Boot**, **Post
 - Hibernate / JPA
 
 ## Note
-Payment handling is **dummy logic** implemented for portfolio demonstration purposes.
+Payment handling is **dummy logic** implemented for  demonstration purposes.
