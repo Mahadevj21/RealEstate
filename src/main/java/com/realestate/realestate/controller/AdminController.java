@@ -1,5 +1,8 @@
 package com.realestate.realestate.controller;
 
+import java.util.List;
+
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -16,6 +19,12 @@ import lombok.RequiredArgsConstructor;
 public class AdminController {
 
     private final UserRepository userRepository;
+
+    // GET ALL USERS
+    @GetMapping("/users")
+    public List<User> getAllUsers() {
+        return userRepository.findAll();
+    }
 
     // BLOCK USER
     @PutMapping("/users/{userId}/block")
