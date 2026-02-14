@@ -30,7 +30,7 @@ public class User {
     private UserStatus status = UserStatus.ACTIVE;
 
     @Enumerated(EnumType.STRING)
-    private Role role = Role.USER;
+    private Role role = Role.BUYER;
 
     @Column(nullable = false)
     private int balance = 0;
@@ -75,6 +75,6 @@ public class User {
     public enum Role {
         ADMIN,
         SELLER,
-        USER
+        BUYER
     }
 }
