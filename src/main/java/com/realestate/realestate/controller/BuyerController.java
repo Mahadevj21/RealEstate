@@ -68,10 +68,10 @@ public class BuyerController {
             @PathVariable Long buyerId,
             @PathVariable Long propertyId
     ) {
-        favouriteRepository.findByUserIdAndPropertyId(buyerId, propertyId)
+        Favourite favourite = favouriteRepository.findByUserIdAndPropertyId(buyerId, propertyId)
                 .orElseThrow(() -> new RuntimeException("Favourite not found"));
 
-        favouriteRepository.deleteByUserIdAndPropertyId(buyerId, propertyId);
+        favouriteRepository.deleteById(favourite.getId());
         return "Property removed from favourites";
     }
 
