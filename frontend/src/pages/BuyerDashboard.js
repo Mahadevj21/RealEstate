@@ -143,28 +143,28 @@ export const BuyerDashboard = () => {
 
   return (
     <div className="dashboard-content">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div className="dashboard-header-row">
         <h2>Buyer Dashboard</h2>
-        <div style={{ fontSize: '18px', fontWeight: 'bold', padding: '10px 15px', backgroundColor: '#e8f5e9', borderRadius: '5px' }}>
-          💰 Balance: {balance}
+        <div className="balance-badge">
+          💰 {balance.toLocaleString()}
         </div>
       </div>
       {message && <p className="message">{message}</p>}
 
       <div className="admin-tabs">
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'properties' ? 'active' : ''}`}
           onClick={() => { setActiveTab('properties'); }}
         >
           🏠 Properties
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'favorites' ? 'active' : ''}`}
           onClick={() => { setActiveTab('favorites'); }}
         >
           ❤ My Favorites
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'wallet' ? 'active' : ''}`}
           onClick={() => { setActiveTab('wallet'); loadTransactions(); }}
         >
@@ -207,7 +207,7 @@ export const BuyerDashboard = () => {
               <p>No properties found</p>
             ) : (
               properties.map(prop => (
-                <div key={prop.id} className="property-card" onClick={() => setSelectedProperty(prop)} style={{cursor: 'pointer'}}>
+                <div key={prop.id} className="property-card" onClick={() => setSelectedProperty(prop)} style={{ cursor: 'pointer' }}>
                   {prop.imageUrl && (
                     <img src={prop.imageUrl} alt={prop.title} className="property-image" />
                   )}
@@ -219,8 +219,8 @@ export const BuyerDashboard = () => {
                   </p>
                   <div className="card-actions">
                     {!prop.sold && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleBuyClick(prop); }} 
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleBuyClick(prop); }}
                         className="btn-buy"
                         disabled={loading || balance < (prop.price + 100)}
                         style={{
@@ -261,7 +261,7 @@ export const BuyerDashboard = () => {
               <p>No favorites yet</p>
             ) : (
               properties.filter(p => favorites.includes(p.id)).map(prop => (
-                <div key={prop.id} className="property-card" onClick={() => setSelectedProperty(prop)} style={{cursor: 'pointer'}}>
+                <div key={prop.id} className="property-card" onClick={() => setSelectedProperty(prop)} style={{ cursor: 'pointer' }}>
                   {prop.imageUrl && (
                     <img src={prop.imageUrl} alt={prop.title} className="property-image" />
                   )}
@@ -270,8 +270,8 @@ export const BuyerDashboard = () => {
                   <p><strong>₹ {prop.price.toLocaleString()}</strong></p>
                   <div className="card-actions">
                     {!prop.sold && (
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleBuyClick(prop); }} 
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleBuyClick(prop); }}
                         className="btn-buy"
                         disabled={loading || balance < (prop.price + 100)}
                         style={{
@@ -301,9 +301,9 @@ export const BuyerDashboard = () => {
       {activeTab === 'wallet' && (
         <div className="wallet-section">
           <h3>My Wallet & Transaction History</h3>
-          <div style={{ backgroundColor: '#f5f5f5', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+          <div className="balance-display">
             <h4>Current Balance</h4>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#4CAF50' }}>₹{balance.toLocaleString()}</p>
+            <p>₹{balance.toLocaleString()}</p>
           </div>
 
           <h4>Transaction History</h4>
@@ -328,8 +328,8 @@ export const BuyerDashboard = () => {
                     <tr key={tx.id}>
                       <td>{tx.id}</td>
                       <td>
-                        <span style={{ 
-                          padding: '4px 8px', 
+                        <span style={{
+                          padding: '4px 8px',
                           borderRadius: '4px',
                           backgroundColor: tx.type === 'CREDIT' ? '#c8e6c9' : '#ffcdd2',
                           color: tx.type === 'CREDIT' ? '#2e7d32' : '#c62828'
@@ -364,7 +364,7 @@ export const BuyerDashboard = () => {
               <p className="fullscreen-location">📍 {selectedProperty.location}</p>
               <p className="fullscreen-seller">👤 Seller: {selectedProperty.seller?.username}</p>
               <p className="fullscreen-status">{selectedProperty.sold ? '❌ Sold' : '✓ Available for Sale'}</p>
-              
+
               <div className="fullscreen-description">
                 <h2>Description</h2>
                 <p>{selectedProperty.description}</p>
@@ -372,7 +372,7 @@ export const BuyerDashboard = () => {
 
               <div className="fullscreen-actions">
                 {!selectedProperty.sold && (
-                  <button 
+                  <button
                     onClick={() => { handleBuyClick(selectedProperty); }}
                     disabled={loading || balance < (selectedProperty.price + 100)}
                     style={{
@@ -405,59 +405,34 @@ export const BuyerDashboard = () => {
       )}
 
       {showBuyDialog && buyingProperty && (
-        <div className="fullscreen-detail-view" style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}>
-          <div style={{
-            backgroundColor: 'white',
-            padding: '30px',
-            borderRadius: '10px',
-            textAlign: 'center',
-            maxWidth: '400px',
-            margin: '100px auto'
-          }}>
+        <div className="modal-overlay">
+          <div className="modal-card">
             <h2>Confirm Purchase</h2>
-            <p style={{ fontSize: '16px', marginBottom: '15px' }}>
-              Property: <strong>{buyingProperty.title}</strong>
+            <p>Property: <strong>{buyingProperty.title}</strong></p>
+            <p>Location: <strong>{buyingProperty.location}</strong></p>
+            <p style={{ fontSize: '1.5rem', color: 'var(--primary)', fontWeight: '900', margin: '20px 0' }}>
+              Cost: ₹{(buyingProperty.price + 100).toLocaleString()}
             </p>
-            <p style={{ fontSize: '16px', marginBottom: '15px' }}>
-              Location: <strong>{buyingProperty.location}</strong>
+            <p style={{ fontSize: '0.9rem' }}>
+              Tax & Brokerage: ₹100 | Your Balance: ₹{balance.toLocaleString()}
             </p>
-            <p style={{ fontSize: '18px', color: '#ff6b6b', fontWeight: 'bold', marginBottom: '15px' }}>
-              Cost: ₹{(buyingProperty.price + 100).toLocaleString()} (₹{buyingProperty.price.toLocaleString()} + ₹100 brokerage)
-            </p>
-            <p style={{ fontSize: '16px', marginBottom: '20px' }}>
-              Current Balance: <strong>{balance}</strong>
-            </p>
+
             {balance < (buyingProperty.price + 100) && (
-              <p style={{ color: 'red', fontSize: '14px', marginBottom: '15px' }}>
-                ❌ Insufficient balance. You need ₹{(buyingProperty.price + 100).toLocaleString()} credits.
+              <p style={{ color: 'var(--accent)', fontSize: '0.9rem', marginTop: '10px' }}>
+                ⚠️ Insufficient balance for this transaction.
               </p>
             )}
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button
-                onClick={() => setShowBuyDialog(false)}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#ddd',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer'
-                }}
-              >
+
+            <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
+              <button onClick={() => setShowBuyDialog(false)} className="btn-fav">
                 Cancel
               </button>
               <button
                 onClick={handleConfirmBuy}
                 disabled={loading || balance < (buyingProperty.price + 100)}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: balance < (buyingProperty.price + 100) ? '#ccc' : '#4CAF50',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: balance < (buyingProperty.price + 100) ? 'not-allowed' : 'pointer'
-                }}
+                className="btn-buy"
               >
-                {loading ? 'Processing...' : 'Confirm Purchase'}
+                {loading ? 'Processing...' : 'Confirm'}
               </button>
             </div>
           </div>
