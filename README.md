@@ -69,7 +69,7 @@ Edit `backend/src/main/resources/application.properties`:
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/RealEstate
 spring.datasource.username=postgres
-spring.datasource.password=root
+spring.datasource.password=----
 spring.jpa.hibernate.ddl-auto=update
 ```
 
