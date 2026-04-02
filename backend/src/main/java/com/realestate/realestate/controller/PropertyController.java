@@ -100,6 +100,15 @@ public class PropertyController {
             if (updatedProperty.getImageUrl() != null) {
                 property.setImageUrl(updatedProperty.getImageUrl());
             }
+            if (updatedProperty.getBedrooms() != null) {
+                property.setBedrooms(updatedProperty.getBedrooms());
+            }
+            if (updatedProperty.getBathrooms() != null) {
+                property.setBathrooms(updatedProperty.getBathrooms());
+            }
+            if (updatedProperty.getType() != null) {
+                property.setType(updatedProperty.getType());
+            }
 
             Property saved = propertyRepository.save(property);
             System.out.println("Property updated - imageUrl in DB: " + (saved.getImageUrl() != null ? saved.getImageUrl().length() : "null"));

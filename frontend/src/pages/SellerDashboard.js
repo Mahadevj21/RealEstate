@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/apiService';
 import '../styles/Dashboard.css';
@@ -8,7 +8,7 @@ export const SellerDashboard = () => {
   const [properties, setProperties] = useState([]);
   const [pendingDeals, setPendingDeals] = useState([]);
   const [balance, setBalance] = useState(0);
-  const [formData, setFormData] = useState({ title: '', description: '', price: '', location: '', imageUrl: '' });
+  const [formData, setFormData] = useState({ title: '', description: '', price: '', location: '', imageUrl: '', bedrooms: '', bathrooms: '', type: 'apartment' });
   const [imagePreview, setImagePreview] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -16,6 +16,7 @@ export const SellerDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('properties');
   const [transactions, setTransactions] = useState([]);
+  const formRef = useRef(null);
 
 
   useEffect(() => {
@@ -192,7 +193,10 @@ export const SellerDashboard = () => {
           formData.description,
           parseInt(formData.price),
           formData.location,
-          formData.imageUrl
+          formData.imageUrl,
+          parseInt(formData.bedrooms) || 0,
+          parseInt(formData.bathrooms) || 0,
+          formData.type
         );
         console.log('Update result:', result);
         setMessage('✓ Property updated successfully');
@@ -205,12 +209,15 @@ export const SellerDashboard = () => {
           formData.description,
           parseInt(formData.price),
           formData.location,
-          formData.imageUrl
+          formData.imageUrl,
+          parseInt(formData.bedrooms) || 0,
+          parseInt(formData.bathrooms) || 0,
+          formData.type
         );
         console.log('Add result:', result);
         setMessage('✓ Property added successfully');
       }
-      setFormData({ title: '', description: '', price: '', location: '', imageUrl: '' });
+      setFormData({ title: '', description: '', price: '', location: '', imageUrl: '', bedrooms: '', bathrooms: '', type: 'apartment' });
       setImagePreview('');
       setEditingId(null);
       setShowForm(false);
@@ -230,15 +237,23 @@ export const SellerDashboard = () => {
       description: prop.description,
       price: prop.price,
       location: prop.location,
-      imageUrl: prop.imageUrl
+      imageUrl: prop.imageUrl,
+      bedrooms: prop.bedrooms || '',
+      bathrooms: prop.bathrooms || '',
+      type: prop.type || 'apartment'
     });
     setImagePreview(prop.imageUrl);
     setEditingId(prop.id);
     setShowForm(true);
+    
+    // Scroll to form with smooth animation
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   const handleCancelEdit = () => {
-    setFormData({ title: '', description: '', price: '', location: '', imageUrl: '' });
+    setFormData({ title: '', description: '', price: '', location: '', imageUrl: '', bedrooms: '', bathrooms: '', type: 'apartment' });
     setImagePreview('');
     setEditingId(null);
     setShowForm(false);
@@ -299,38 +314,97 @@ export const SellerDashboard = () => {
           </button>
 
           {showForm && (
-            <form onSubmit={handleAddProperty} className="form-container seller-form">
+            <form ref={formRef} onSubmit={handleAddProperty} className="form-container seller-form">
               <h3>{editingId ? '✏️ Edit Property' : '➕ Add New Property'}</h3>
-              <input
-                type="text"
-                name="title"
-                placeholder="Property Title"
-                value={formData.title}
-                onChange={handleChange}
-                required
-              />
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                <input
+                  type="text"
+                  name="title"
+                  placeholder="Property Title"
+                  value={formData.title}
+                  onChange={handleChange}
+                  required
+                  style={{ flex: 2 }}
+                />
+                <input
+                  type="number"
+                  name="price"
+                  placeholder="Price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  required
+                  style={{ flex: 1 }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
+                <input
+                  type="text"
+                  name="location"
+                  placeholder="Location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  required
+                  style={{ flex: 2 }}
+                />
+                <div style={{ flex: 1, display: 'flex', gap: '8px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>Bedrooms</label>
+                    <input
+                      type="number"
+                      name="bedrooms"
+                      placeholder="Beds"
+                      value={formData.bedrooms}
+                      onChange={handleChange}
+                      required
+                      style={{ width: '100%', padding: '12px' }}
+                    />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px', display: 'block' }}>Bathrooms</label>
+                    <input
+                      type="number"
+                      name="bathrooms"
+                      placeholder="Baths"
+                      value={formData.bathrooms}
+                      onChange={handleChange}
+                      required
+                      style={{ width: '100%', padding: '12px' }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', gap: '6px', flexWrap: 'nowrap' }}>
+                  {['apartment', 'house', 'villa', 'townhouse'].map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, type })}
+                      style={{
+                        flex: '1',
+                        padding: '10px 4px',
+                        fontSize: '0.75rem',
+                        borderRadius: '6px',
+                        border: '1px solid var(--border)',
+                        background: formData.type === type ? 'var(--grad-aurora)' : 'var(--surface-3)',
+                        color: formData.type === type ? 'white' : 'var(--text-muted)',
+                        textTransform: 'capitalize',
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {type === 'apartment' ? 'Apt' : type === 'townhouse' ? 'Town' : type}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <textarea
                 name="description"
-                placeholder="Description"
+                placeholder="Brief property description..."
                 value={formData.description}
                 onChange={handleChange}
                 required
-              />
-              <input
-                type="number"
-                name="price"
-                placeholder="Price"
-                value={formData.price}
-                onChange={handleChange}
-                required
-              />
-              <input
-                type="text"
-                name="location"
-                placeholder="Location"
-                value={formData.location}
-                onChange={handleChange}
-                required
+                style={{ width: '100%', marginBottom: '12px' }}
               />
               <div className="image-upload-section">
                 <h4>{editingId ? '✏️ Update Property Image' : 'Add Property Image'}</h4>
@@ -356,9 +430,16 @@ export const SellerDashboard = () => {
                   className="url-input"
                 />
                 {imagePreview && (
-                  <div className="image-preview">
-                    <p>✓ Image Preview:</p>
-                    <img src={imagePreview} alt="Preview" />
+                  <div className="image-preview" style={{ marginTop: '12px' }}>
+                    <p style={{ fontSize: '0.85rem', marginBottom: '8px' }}>✓ Image Preview:</p>
+                    <img src={imagePreview} alt="Preview" style={{ 
+                      width: '100%', 
+                      maxWidth: '180px', 
+                      height: '110px', 
+                      objectFit: 'cover', 
+                      borderRadius: '8px',
+                      border: '1px solid var(--border)'
+                    }} />
                   </div>
                 )}
               </div>
@@ -386,6 +467,11 @@ export const SellerDashboard = () => {
                   <h4>{prop.title}</h4>
                   <p>{prop.description}</p>
                   <p><strong>₹ {prop.price.toLocaleString()}</strong> - {prop.location}</p>
+                  <p style={{ display: 'flex', gap: '15px', color: '#666', fontSize: '0.9em', margin: '5px 0' }}>
+                    <span>🛏️ {prop.bedrooms || 0} Beds</span>
+                    <span>🛁 {prop.bathrooms || 0} Baths</span>
+                    <span style={{ textTransform: 'capitalize' }}>🏠 {prop.type || 'N/A'}</span>
+                  </p>
                   <p>{prop.sold ? '❌ Sold' : '✓ Available'}</p>
                   <div className="property-actions">
                     <button onClick={() => handleEditProperty(prop)} disabled={loading} className="btn-edit">

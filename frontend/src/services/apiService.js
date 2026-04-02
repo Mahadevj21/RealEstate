@@ -18,12 +18,12 @@ export const apiService = {
   getProperties: () =>
     fetch(`${API_BASE_URL}/properties`).then(r => r.json()),
 
-  addProperty: (sellerId, title, description, price, location, imageUrl) => {
+  addProperty: (sellerId, title, description, price, location, imageUrl, bedrooms, bathrooms, type) => {
     console.log('Adding property - imageUrl length:', imageUrl?.length || 0);
     return fetch(`${API_BASE_URL}/properties/add/${sellerId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description, price, location, imageUrl }),
+      body: JSON.stringify({ title, description, price, location, imageUrl, bedrooms, bathrooms, type }),
     }).then(r => {
       console.log('Add property response status:', r.status);
       if (!r.ok) throw new Error(`Add failed with status ${r.status}`);
@@ -55,12 +55,12 @@ export const apiService = {
     }
   },
 
-  updateProperty: (propertyId, title, description, price, location, imageUrl) => {
+  updateProperty: (propertyId, title, description, price, location, imageUrl, bedrooms, bathrooms, type) => {
     console.log('Updating property - imageUrl length:', imageUrl?.length || 0);
     return fetch(`${API_BASE_URL}/properties/${propertyId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title, description, price, location, imageUrl }),
+      body: JSON.stringify({ title, description, price, location, imageUrl, bedrooms, bathrooms, type }),
     }).then(r => {
       console.log('Update property response status:', r.status);
       if (!r.ok) throw new Error(`Update failed with status ${r.status}`);

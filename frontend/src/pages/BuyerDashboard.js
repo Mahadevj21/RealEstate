@@ -430,6 +430,11 @@ export const BuyerDashboard = () => {
                   <h4>{prop.title}</h4>
                   <p>{prop.description}</p>
                   <p><strong>₹ {prop.price.toLocaleString()}</strong> - {prop.location}</p>
+                  <p style={{ display: 'flex', gap: '15px', color: '#666', fontSize: '0.9em', margin: '5px 0' }}>
+                    <span>🛏️ {prop.bedrooms || 0} Beds</span>
+                    <span>🛁 {prop.bathrooms || 0} Baths</span>
+                    <span style={{ textTransform: 'capitalize' }}>🏠 {prop.type || 'N/A'}</span>
+                  </p>
                   <p style={{ color: prop.sold ? 'red' : 'green', fontWeight: 'bold' }}>
                     {prop.sold ? '❌ SOLD' : '✓ Available'}
                   </p>
@@ -484,6 +489,11 @@ export const BuyerDashboard = () => {
                   <h4>{prop.title}</h4>
                   <p>{prop.location}</p>
                   <p><strong>₹ {prop.price.toLocaleString()}</strong></p>
+                  <p style={{ display: 'flex', gap: '15px', color: '#666', fontSize: '0.9em', margin: '5px 0' }}>
+                    <span>🛏️ {prop.bedrooms || 0} Beds</span>
+                    <span>🛁 {prop.bathrooms || 0} Baths</span>
+                    <span style={{ textTransform: 'capitalize' }}>🏠 {prop.type || 'N/A'}</span>
+                  </p>
                   <div className="card-actions">
                     {!prop.sold && (
                       <button
@@ -579,6 +589,7 @@ export const BuyerDashboard = () => {
               <h1>{selectedProperty.title}</h1>
               <p className="fullscreen-price">₹ {selectedProperty.price.toLocaleString()}</p>
               <p className="fullscreen-location">📍 {selectedProperty.location}</p>
+              <p className="fullscreen-location">🛏️ {selectedProperty.bedrooms || 0} Beds | 🛁 {selectedProperty.bathrooms || 0} Baths | <span style={{ textTransform: 'capitalize' }}>🏠 {selectedProperty.type || 'N/A'}</span></p>
               <p className="fullscreen-seller">👤 Seller: {selectedProperty.seller?.username}</p>
               <p className="fullscreen-status">{selectedProperty.sold ? '❌ Sold' : '✓ Available for Sale'}</p>
 
