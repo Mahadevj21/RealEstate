@@ -1,13 +1,246 @@
-body {
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700;800&display=swap');
+
+/* =============================================
+   DESIGN TOKENS
+   ============================================= */
+:root {
+  --primary: hsl(265, 89%, 66%);
+  --primary-light: hsl(265, 89%, 76%);
+  --primary-glow: hsla(265, 89%, 66%, 0.35);
+  --secondary: hsl(220, 91%, 60%);
+  --secondary-glow: hsla(220, 91%, 60%, 0.3);
+  --accent: hsl(344, 90%, 60%);
+  --accent-glow: hsla(344, 90%, 60%, 0.3);
+  --success: hsl(158, 64%, 50%);
+  --warning: hsl(38, 92%, 60%);
+
+  --grad-aurora: linear-gradient(135deg, hsl(265, 89%, 66%) 0%, hsl(220, 91%, 60%) 100%);
+  --grad-sunset: linear-gradient(135deg, hsl(344, 90%, 60%) 0%, hsl(28, 90%, 62%) 100%);
+  --grad-emerald: linear-gradient(135deg, hsl(158, 64%, 50%) 0%, hsl(186, 80%, 50%) 100%);
+
+  --background: hsl(222, 47%, 5%);
+  --surface: hsl(222, 40%, 8%);
+  --surface-2: hsl(222, 35%, 11%);
+  --surface-3: hsl(222, 30%, 14%);
+  --surface-hover: hsl(222, 35%, 13%);
+
+  --text-main: hsl(210, 40%, 97%);
+  --text-sub: hsl(215, 25%, 75%);
+  --text-muted: hsl(217, 20%, 52%);
+
+  --border: rgba(255, 255, 255, 0.07);
+  --border-focus: hsla(265, 89%, 66%, 0.4);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 56px rgba(0, 0, 0, 0.55);
+  --shadow-glow: 0 0 16px var(--primary-glow);
+
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Light mode theme */
+[data-theme="light"] {
+  --background: hsl(210, 20%, 98%);
+  --surface: hsl(210, 15%, 95%);
+  --surface-2: hsl(210, 12%, 92%);
+  --surface-3: hsl(210, 10%, 88%);
+  --surface-hover: hsl(210, 12%, 90%);
+
+  --text-main: hsl(220, 20%, 15%);
+  --text-sub: hsl(220, 15%, 40%);
+  --text-muted: hsl(220, 12%, 60%);
+
+  --border: rgba(0, 0, 0, 0.08);
+  --border-focus: hsla(265, 89%, 66%, 0.4);
+
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 20px 56px rgba(0, 0, 0, 0.2);
+}
+
+/* =============================================
+   RESET & BASE
+   ============================================= */
+*,
+*::before,
+*::after {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--background);
+  color: var(--text-main);
+  line-height: 1.6;
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: 'Fira Code', source-code-pro, Menlo, Monaco, Consolas, monospace;
+}
+
+a {
+  color: var(--primary-light);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--text-main);
+}
+
+/* =============================================
+   KEYFRAMES — purposeful only
+   ============================================= */
+
+/* Used for page/component entrance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDownFade {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Used for skeleton loading state */
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+
+  100% {
+    background-position: 200% center;
+  }
+}
+
+/* Used for gradient animated text */
+@keyframes gradient-shift {
+
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Used for dropdown/menu reveal */
+@keyframes menuOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Used for error shake */
+@keyframes shakeX {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-6px);
+  }
+
+  75% {
+    transform: translateX(6px);
+  }
+}
+
+/* =============================================
+   SCROLLBAR
+   ============================================= */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--background);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* =============================================
+   SKELETON LOADER UTILITY
+   ============================================= */
+.skeleton {
+  background: linear-gradient(90deg,
+      var(--surface) 25%,
+      var(--surface-2) 50%,
+      var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius);
 }

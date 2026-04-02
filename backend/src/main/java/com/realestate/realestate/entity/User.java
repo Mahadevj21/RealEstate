@@ -33,7 +33,7 @@ public class User {
     private Role role = Role.BUYER;
 
     @Column(nullable = false)
-    private int balance = 0;
+    private double balance = 0.0;
 
     @Column(nullable = false)
     private boolean blocked = false;
@@ -57,8 +57,8 @@ public class User {
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
 
-    public int getBalance() { return balance; }
-    public void setBalance(int balance) { this.balance = balance; }
+    public double getBalance() { return balance; }
+    public void setBalance(double balance) { this.balance = balance; }
 
     public boolean isBlocked() { return blocked; }
     public void setBlocked(boolean blocked) { this.blocked = blocked; }

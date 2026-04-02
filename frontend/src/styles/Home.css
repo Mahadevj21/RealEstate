@@ -1,100 +1,385 @@
+/* =============================================
+   HOME.CSS — Login / Register Page
+   Professional SaaS dark theme
+   ============================================= */
+
 .home-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 24px;
+  background: var(--background);
+
+  /* Clean, very subtle top gradient — not a glowing blob, just a gentle tint */
+  background-image: linear-gradient(180deg,
+      hsla(265, 50%, 14%, 0.45) 0%,
+      transparent 40%);
 }
 
+/* ----- Glassmorphism Card ----- */
 .home-box {
-  background: white;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 52px 56px;
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04),
+    0 24px 48px -12px rgba(0, 0, 0, 0.55);
   width: 100%;
-  max-width: 400px;
+  max-width: 480px;
+  animation: fadeIn 0.4s ease-out;
 }
 
-.site-title {
-  text-align: center;
-  color: #667eea;
-  font-size: 2.5rem;
-  margin-bottom: 10px;
+.home-box h1 {
+  font-size: 2rem;
   font-weight: 800;
+  margin-bottom: 8px;
+  background: var(--grad-aurora);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .home-box h2 {
-  text-align: center;
-  color: #333;
-  margin-bottom: 30px;
+  font-size: 1.4rem;
+  color: var(--text-main);
+  margin-bottom: 24px;
+  font-weight: 600;
 }
 
-.home-box form {
+/* ----- Form Styling ----- */
+form {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 16px;
 }
 
-.home-box input {
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.3s;
+form input,
+form select {
+  width: 100%;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-main);
+  font-size: 0.95rem;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.home-box input:focus {
+form input:focus,
+form select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary);
+  background-color: var(--surface-3);
+  box-shadow: 0 0 0 3px var(--primary-glow);
 }
 
-.home-box button[type="submit"] {
-  padding: 12px;
-  background: #667eea;
+form input::placeholder {
+  color: var(--text-muted);
+}
+
+/* ----- Role Selection ----- */
+.role-section {
+  margin-bottom: 16px;
+}
+
+.role-label {
+  display: block;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+
+.role-options {
+  display: flex;
+  gap: 16px;
+}
+
+.role-option {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex: 1;
+}
+
+.role-option input[type="radio"] {
+  width: auto;
+  margin-right: 8px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.role-option label {
+  cursor: pointer;
+  color: var(--text-sub);
+  transition: color 0.2s ease;
+}
+
+.role-option input[type="radio"]:checked + label {
+  color: var(--primary);
+  font-weight: 600;
+}
+
+/* ----- Submit Button ----- */
+form button[type="submit"] {
+  width: 100%;
+  padding: 12px 24px;
+  background: var(--grad-aurora);
   color: white;
   border: none;
-  border-radius: 6px;
-  font-size: 1rem;
+  border-radius: var(--radius-sm);
   font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  margin-top: 8px;
 }
 
-.home-box button[type="submit"]:hover:not(:disabled) {
-  background: #764ba2;
+form button[type="submit"]:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px var(--primary-glow);
 }
 
-.home-box button[type="submit"]:disabled {
-  background: #ccc;
+form button[type="submit"]:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+form button[type="submit"]:disabled {
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
+/* ----- Error Message ----- */
+.error-message {
+  background: hsla(344, 90%, 60%, 0.15);
+  color: hsl(344, 90%, 70%);
+  padding: 12px 16px;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid hsl(344, 90%, 60%);
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ----- Toggle Link ----- */
 .toggle-text {
   text-align: center;
-  margin-top: 20px;
-  color: #666;
+  margin-top: 24px;
+  color: var(--text-sub);
+  font-size: 0.9rem;
 }
 
 .toggle-button {
   background: none;
   border: none;
-  color: #667eea;
+  color: var(--primary);
   cursor: pointer;
   font-weight: 600;
   text-decoration: underline;
+  transition: color 0.2s ease;
+  padding: 0;
+  font-size: 0.9rem;
 }
 
 .toggle-button:hover {
-  color: #764ba2;
+  color: var(--primary-light);
 }
 
-.error-message {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
-  color: #856404;
-  padding: 12px;
-  border-radius: 6px;
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Top accent line — thin, subtle, professional */
+.home-box::before {
+  content: '';
+  display: block;
+  height: 1px;
+  margin: -52px -56px 52px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  background: linear-gradient(90deg,
+      transparent 0%,
+      var(--primary) 30%,
+      var(--secondary) 70%,
+      transparent 100%);
+  opacity: 0.5;
+}
+
+/* ----- Site Title ----- */
+.site-title {
   text-align: center;
-  margin-bottom: 15px;
+  font-size: 2.6rem;
+  font-weight: 900;
+  letter-spacing: -2.5px;
+  margin-bottom: 6px;
+  font-family: 'Space Grotesk', sans-serif;
+  background: var(--grad-aurora);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.home-box h2 {
+  text-align: center;
+  color: var(--text-muted);
+  margin-bottom: 40px;
+  font-weight: 400;
+  font-size: 0.95rem;
+  letter-spacing: 0.01em;
+}
+
+/* ----- Form ----- */
+.home-box form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.home-box label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 8px;
+}
+
+/* Input — clean, no glow rings on hover */
+.home-box input,
+.home-box select {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  background: var(--surface-2);
+  color: var(--text-main);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  display: block;
+}
+
+.home-box input:hover,
+.home-box select:hover {
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.home-box input:focus,
+.home-box select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px hsla(265, 89%, 66%, 0.15);
+}
+
+.home-box select option {
+  background: var(--surface-2);
+  color: var(--text-main);
+}
+
+/* ----- Submit Button ----- */
+.home-box button[type="submit"] {
+  width: 100%;
+  padding: 14px;
+  background: var(--grad-aurora);
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+  transition: opacity 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 16px -4px var(--primary-glow);
+}
+
+.home-box button[type="submit"]:hover:not(:disabled) {
+  opacity: 0.92;
+  transform: translateY(-1px);
+  box-shadow: 0 8px 20px -4px var(--primary-glow);
+}
+
+.home-box button[type="submit"]:active:not(:disabled) {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.home-box button[type="submit"]:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ----- Toggle Link ----- */
+.toggle-text {
+  text-align: center;
+  margin-top: 28px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.toggle-button {
+  background: none;
+  border: none;
+  color: var(--primary-light);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.875rem;
+  padding: 0 4px;
+  transition: color 0.15s ease;
+}
+
+.toggle-button:hover {
+  color: var(--text-main);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ----- Error Message ----- */
+.error-message {
+  background: hsla(344, 90%, 60%, 0.08);
+  border: 1px solid hsla(344, 90%, 60%, 0.22);
+  color: hsl(344, 90%, 72%);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  text-align: center;
+  font-weight: 500;
+  font-size: 0.875rem;
+  animation: shakeX 0.4s ease;
+}
+
+@keyframes shakeX {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-6px);
+  }
+
+  75% {
+    transform: translateX(6px);
+  }
 }

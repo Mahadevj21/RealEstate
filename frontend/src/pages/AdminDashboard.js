@@ -58,7 +58,7 @@ export const AdminDashboard = () => {
   const loadTransactions = async (userId) => {
     try {
       const txData = await apiService.getTransactionHistory(userId);
-      setTransactions(Array.isArray(txData) ? txData : []);
+      setTransactions(Array.isArray(txData) ? [...txData].reverse() : []);
     } catch (err) {
       console.error('Failed to load transactions:', err);
     }
@@ -102,51 +102,51 @@ export const AdminDashboard = () => {
   };
 
   const handleDeleteProperty = async (propertyId) => {
-    if (window.confirm('Are you sure you want to delete this property?')) {
-      try {
-        setLoading(true);
-        await apiService.deleteProperty(propertyId);
-        setProperties(properties.filter(p => p.id !== propertyId));
-        setMessage('✓ Property deleted successfully');
-        setTimeout(() => setMessage(''), 3000);
-      } catch (err) {
-        setMessage('✗ Failed to delete property');
-      } finally {
-        setLoading(false);
-      }
+    if (!window.confirm('Are you sure you want to delete this property?')) return;
+    try {
+      setLoading(true);
+      await apiService.deleteProperty(propertyId);
+      setMessage('✓ Property deleted successfully');
+      await loadProperties();
+      setTimeout(() => setMessage(''), 3000);
+    } catch (err) {
+      console.error('Delete error:', err);
+      setMessage('✗ Failed to delete: ' + (err.message || 'Unknown error'));
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="dashboard-content">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div className="dashboard-header-row">
         <h2>Admin Dashboard</h2>
-        <div style={{ fontSize: '18px', fontWeight: 'bold', padding: '10px 15px', backgroundColor: '#e8f5e9', borderRadius: '5px' }}>
-          💰 Balance: {balance}
+        <div className="balance-badge">
+          💰 {balance.toLocaleString()}
         </div>
       </div>
       {message && <p className="message">{message}</p>}
 
       <div className="admin-tabs">
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
           onClick={() => setActiveTab('users')}
         >
           👥 Manage Users
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'properties' ? 'active' : ''}`}
           onClick={() => setActiveTab('properties')}
         >
           🏠 Manage Properties
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'deals' ? 'active' : ''}`}
           onClick={() => setActiveTab('deals')}
         >
           💼 Completed Deals
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'wallet' ? 'active' : ''}`}
           onClick={() => setActiveTab('wallet')}
         >
@@ -178,7 +178,12 @@ export const AdminDashboard = () => {
                   <td>{u.blocked ? '🔒 Blocked' : '✓ Active'}</td>
                   <td>
                     {u.blocked ? (
-                      <button onClick={() => handleUnblockUser(u.id)} disabled={loading} className="btn-unblock">
+                    <button
+                      onClick={() => handleUnblockUser(u.id)}
+                      disabled={loading}
+                      className="btn-unblock"
+                      style={{ padding: '10px 16px', fontSize: '0.9rem' }}
+                    >
                         Unblock
                       </button>
                     ) : (
@@ -209,8 +214,8 @@ export const AdminDashboard = () => {
                   <p className="location">📍 {p.location}</p>
                   <p className="seller">Seller: {p.seller?.username}</p>
                   <p className="status">{p.sold ? '❌ Sold' : '✓ Available'}</p>
-                  <button 
-                    onClick={() => handleDeleteProperty(p.id)} 
+                  <button
+                    onClick={() => handleDeleteProperty(p.id)}
                     disabled={loading}
                     className="btn-delete"
                   >
@@ -267,9 +272,9 @@ export const AdminDashboard = () => {
       {activeTab === 'wallet' && (
         <div className="wallet-section">
           <h3>Wallet & Transaction History</h3>
-          <div style={{ backgroundColor: '#f5f5f5', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
+          <div className="balance-display">
             <h4>Current Balance</h4>
-            <p style={{ fontSize: '32px', fontWeight: 'bold', color: '#4CAF50' }}>₹{balance.toLocaleString()}</p>
+            <p>₹{balance.toLocaleString()}</p>
           </div>
 
           <h4>Transaction History</h4>
@@ -294,8 +299,8 @@ export const AdminDashboard = () => {
                     <tr key={tx.id}>
                       <td>{tx.id}</td>
                       <td>
-                        <span style={{ 
-                          padding: '4px 8px', 
+                        <span style={{
+                          padding: '4px 8px',
                           borderRadius: '4px',
                           backgroundColor: tx.type === 'CREDIT' ? '#c8e6c9' : '#ffcdd2',
                           color: tx.type === 'CREDIT' ? '#2e7d32' : '#c62828'

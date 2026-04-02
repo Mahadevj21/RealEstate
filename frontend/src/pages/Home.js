@@ -48,7 +48,7 @@ export const Home = () => {
   return (
     <div className="home-container">
       <div className="home-box">
-        <h1 className="site-title">PropManage</h1>
+        <h1>PropManage</h1>
         <h2>{isSignup ? 'Sign Up' : 'Login'}</h2>
 
         {error && <p className="error-message">{error}</p>}
@@ -64,31 +64,31 @@ export const Home = () => {
                 onChange={handleChange}
                 required
               />
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Select Role:</label>
-                <div style={{ display: 'flex', gap: '15px' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              <div className="role-section">
+                <label className="role-label">Select Role:</label>
+                <div className="role-options">
+                  <div className="role-option">
                     <input
                       type="radio"
+                      id="role-buyer"
                       name="role"
                       value="BUYER"
                       checked={formData.role === 'BUYER'}
                       onChange={handleChange}
-                      style={{ marginRight: '8px', cursor: 'pointer' }}
                     />
-                    Buyer
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                    <label htmlFor="role-buyer">Buyer</label>
+                  </div>
+                  <div className="role-option">
                     <input
                       type="radio"
+                      id="role-seller"
                       name="role"
                       value="SELLER"
                       checked={formData.role === 'SELLER'}
                       onChange={handleChange}
-                      style={{ marginRight: '8px', cursor: 'pointer' }}
                     />
-                    Seller
-                  </label>
+                    <label htmlFor="role-seller">Seller</label>
+                  </div>
                 </div>
               </div>
             </>

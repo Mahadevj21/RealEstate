@@ -31,13 +31,29 @@ export const apiService = {
     });
   },
 
-  deleteProperty: (propertyId) =>
-    fetch(`${API_BASE_URL}/properties/${propertyId}`, { method: 'DELETE' })
-      .then(r => {
-        console.log('Delete response status:', r.status);
-        if (!r.ok) throw new Error(`Delete failed with status ${r.status}`);
-        return r.text().then(text => text ? JSON.parse(text) : { success: true });
-      }),
+  deleteProperty: async (propertyId) => {
+    const response = await fetch(`${API_BASE_URL}/properties/${propertyId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`
+      }
+    });
+    console.log('Delete response status:', response.status);
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(error || `Delete failed with status ${response.status}`);
+    }
+    // Handle both 204 No Content and 200 OK responses
+    if (response.status === 204) {
+      return true;
+    }
+    try {
+      return await response.json();
+    } catch (e) {
+      return true;
+    }
+  },
 
   updateProperty: (propertyId, title, description, price, location, imageUrl) => {
     console.log('Updating property - imageUrl length:', imageUrl?.length || 0);
@@ -132,4 +148,15 @@ export const apiService = {
   // Seller properties
   getSellerProperties: (sellerId) =>
     fetch(`${API_BASE_URL}/seller/${sellerId}/properties`).then(r => r.json()),
+
+  // Profile endpoints
+  updateProfile: (userId, username, email, password) =>
+    fetch(`${API_BASE_URL}/auth/profile/${userId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, email, password })
+    }).then(r => {
+      if (!r.ok) throw new Error('Failed to update profile');
+      return r.json();
+    }),
 };

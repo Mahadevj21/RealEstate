@@ -1,26 +1,44 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background: #f5f5f5;
-}
+/* =============================================
+   APP.CSS — Global Layout
+   ============================================= */
 
 .App {
   min-height: 100vh;
 }
 
+/* Site title in header — gradient text, static */
 .site-title-header {
-  color: #667eea;
-  font-size: 1.8rem;
+  font-size: 1.6rem;
   font-weight: 800;
-  letter-spacing: 1px;
+  letter-spacing: -0.8px;
   margin: 0;
+  font-family: 'Space Grotesk', sans-serif;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--grad-aurora);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-button:hover {
-  transition: all 0.3s ease;
+.site-title-header::before {
+  content: '⚡';
+  -webkit-text-fill-color: initial;
+  font-size: 1.25rem;
+}
+
+/* =============================================
+   GLOBAL BUTTON BASE
+   ============================================= */
+button {
+  font-family: inherit;
+  cursor: pointer;
+  transition: opacity 0.15s ease, transform 0.18s ease, box-shadow 0.18s ease, background 0.2s ease;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
 }

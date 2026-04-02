@@ -15,6 +15,8 @@ export const SellerDashboard = () => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('properties');
+  const [transactions, setTransactions] = useState([]);
+
 
   useEffect(() => {
     loadProperties();
@@ -62,6 +64,17 @@ export const SellerDashboard = () => {
     }
   };
 
+  const loadTransactions = async () => {
+    if (!user) return;
+    try {
+      const txData = await apiService.getTransactionHistory(user.id);
+      setTransactions(Array.isArray(txData) ? [...txData].reverse() : []);
+    } catch (err) {
+      console.error('Failed to load transactions:', err);
+    }
+  };
+
+
   const handleAcceptDeal = async (dealId) => {
     try {
       setLoading(true);
@@ -99,23 +112,23 @@ export const SellerDashboard = () => {
     const file = e.target.files[0];
     if (file) {
       console.log('File selected:', file.name, 'Size:', file.size);
-      
+
       // Check file size (max 5MB for compression)
-      if (file.size > 5*1024*1024) {
+      if (file.size > 5 * 1024 * 1024) {
         setMessage('⚠️ Image too large, will be compressed');
       }
-      
+
       // Compress image
       const img = new Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
-        
+
         // Resize to max 600x600
         let width = img.width;
         let height = img.height;
         const maxSize = 600;
-        
+
         if (width > height) {
           if (width > maxSize) {
             height = (height * maxSize) / width;
@@ -127,32 +140,32 @@ export const SellerDashboard = () => {
             height = maxSize;
           }
         }
-        
+
         canvas.width = width;
         canvas.height = height;
         ctx.drawImage(img, 0, 0, width, height);
-        
+
         // Convert to base64 with quality 0.6 for smaller size
         const compressedBase64 = canvas.toDataURL('image/jpeg', 0.6);
         console.log('Original size:', file.size, 'bytes');
         console.log('Compressed base64 length:', compressedBase64.length, 'chars');
-        
+
         if (compressedBase64.length > 1000000) {
           setMessage('⚠️ Image still large after compression, will try to save');
         }
-        
+
         setFormData(prevData => {
           console.log('Setting formData with image');
           return { ...prevData, imageUrl: compressedBase64 };
         });
         setImagePreview(compressedBase64);
       };
-      
+
       img.onerror = () => {
         console.error('Error loading image');
         setMessage('✗ Error processing image');
       };
-      
+
       img.src = URL.createObjectURL(file);
     }
   };
@@ -232,18 +245,16 @@ export const SellerDashboard = () => {
   };
 
   const handleDeleteProperty = async (propertyId) => {
-    console.log('Delete clicked for property:', propertyId);
+    if (!window.confirm('Are you sure you want to delete this property?')) return;
     try {
       setLoading(true);
-      console.log('Calling deleteProperty API...');
-      const result = await apiService.deleteProperty(propertyId);
-      console.log('Delete result:', result);
+      await apiService.deleteProperty(propertyId);
       setMessage('✓ Property deleted successfully');
       await loadProperties();
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       console.error('Delete error:', err);
-      setMessage('✗ Failed to delete property: ' + (err.message || 'Unknown error'));
+      setMessage('✗ Failed to delete: ' + (err.message || 'Unknown error'));
     } finally {
       setLoading(false);
     }
@@ -251,32 +262,39 @@ export const SellerDashboard = () => {
 
   return (
     <div className="dashboard-content">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      <div className="dashboard-header-row">
         <h2>Seller Dashboard</h2>
-        <div style={{ fontSize: '18px', fontWeight: 'bold', padding: '10px 15px', backgroundColor: '#e8f5e9', borderRadius: '5px' }}>
+        <div className="balance-badge">
           💰 Balance: {balance}
         </div>
       </div>
       {message && <p className="message">{message}</p>}
 
       <div className="admin-tabs">
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'properties' ? 'active' : ''}`}
           onClick={() => { setActiveTab('properties'); }}
         >
           🏠 My Properties ({properties.length})
         </button>
-        <button 
+        <button
           className={`tab-btn ${activeTab === 'deals' ? 'active' : ''}`}
           onClick={() => { setActiveTab('deals'); }}
         >
           💼 Buyer Requests ({pendingDeals.length}) {pendingDeals.length > 0 && '🔔'}
         </button>
+        <button
+          className={`tab-btn ${activeTab === 'wallet' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('wallet'); loadTransactions(); }}
+        >
+          💳 Wallet
+        </button>
       </div>
+
 
       {activeTab === 'properties' && (
         <div>
-          <button onClick={() => { editingId ? handleCancelEdit() : setShowForm(!showForm); }} className="btn-primary">
+          <button onClick={() => { editingId ? handleCancelEdit() : setShowForm(!showForm); }} className="btn-primary" style={{ padding: '12px 24px', fontSize: '0.95rem', marginBottom: '16px' }}>
             {showForm ? 'Cancel' : '+ Add Property'}
           </button>
 
@@ -350,8 +368,8 @@ export const SellerDashboard = () => {
             </form>
           )}
 
+          <h3 style={{ marginBottom: '16px' }}>Your Properties ({properties.length})</h3>
           <div className="properties-grid">
-            <h3>Your Properties ({properties.length})</h3>
             {properties.length === 0 ? (
               <p>No properties yet</p>
             ) : (
@@ -459,6 +477,54 @@ export const SellerDashboard = () => {
           )}
         </div>
       )}
+      {activeTab === 'wallet' && (
+        <div className="wallet-section">
+          <h3>My Wallet & Transaction History</h3>
+          <div className="balance-display">
+            <h4>Current Balance</h4>
+            <p>₹{balance.toLocaleString()}</p>
+          </div>
+
+          <h4>Transaction History</h4>
+          <div className="table-view">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Transaction ID</th>
+                  <th>Type</th>
+                  <th>Amount</th>
+                  <th>Description</th>
+                  <th>Date & Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: 'center' }}>No transactions yet</td>
+                  </tr>
+                ) : (
+                  transactions.map(tx => (
+                    <tr key={tx.id}>
+                      <td>{tx.id}</td>
+                      <td>
+                        <span className={`badge ${tx.type === 'CREDIT' ? 'badge-seller' : 'badge-admin'}`}>
+                          {tx.type}
+                        </span>
+                      </td>
+                      <td style={{ fontWeight: 'bold', color: tx.type === 'CREDIT' ? '#10b981' : '#ef4444' }}>
+                        {tx.type === 'CREDIT' ? '+ ' : '- '}₹{tx.amount.toLocaleString()}
+                      </td>
+                      <td>{tx.description}</td>
+                      <td>{new Date(tx.timestamp).toLocaleString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
+
   );
 };

@@ -8,8 +8,12 @@ export const BuyerDashboard = () => {
   const [properties, setProperties] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [transactions, setTransactions] = useState([]);
-  const [filterType, setFilterType] = useState('all');
-  const [filterValue, setFilterValue] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [minPrice, setMinPrice] = useState('');
+  const [maxPrice, setMaxPrice] = useState('');
+  const [bedrooms, setBedrooms] = useState('');
+  const [bathrooms, setBathrooms] = useState('');
+  const [propertyType, setPropertyType] = useState('');
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,6 +21,7 @@ export const BuyerDashboard = () => {
   const [showBuyDialog, setShowBuyDialog] = useState(false);
   const [buyingProperty, setBuyingProperty] = useState(null);
   const [activeTab, setActiveTab] = useState('properties');
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   useEffect(() => {
     loadProperties();
@@ -39,7 +44,7 @@ export const BuyerDashboard = () => {
     if (!user) return;
     try {
       const txData = await apiService.getTransactionHistory(user.id);
-      setTransactions(Array.isArray(txData) ? txData : []);
+      setTransactions(Array.isArray(txData) ? [...txData].reverse() : []);
     } catch (err) {
       console.error('Failed to load transactions:', err);
     }
@@ -92,23 +97,56 @@ export const BuyerDashboard = () => {
     setLoading(true);
 
     try {
-      let data;
-      if (filterType === 'location') {
-        data = await apiService.filterByLocation(filterValue);
-      } else if (filterType === 'price') {
-        const [min, max] = filterValue.split('-');
-        data = await apiService.filterByPrice(parseInt(min), parseInt(max));
-      } else {
-        data = await apiService.getAvailableProperties();
+      // Start with all properties
+      let filtered = properties;
+
+      // Text search
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase();
+        filtered = filtered.filter(p =>
+          p.title.toLowerCase().includes(query) ||
+          p.description.toLowerCase().includes(query) ||
+          p.location.toLowerCase().includes(query)
+        );
       }
-      setProperties(Array.isArray(data) ? data : []);
-      setMessage('✓ Filter applied');
+
+      // Price range filter
+      if (minPrice) {
+        filtered = filtered.filter(p => p.price >= parseInt(minPrice));
+      }
+      if (maxPrice) {
+        filtered = filtered.filter(p => p.price <= parseInt(maxPrice));
+      }
+
+      // Advanced filters (if backend provides these fields)
+      if (bedrooms) {
+        filtered = filtered.filter(p => p.bedrooms && p.bedrooms.toString() === bedrooms);
+      }
+      if (bathrooms) {
+        filtered = filtered.filter(p => p.bathrooms && p.bathrooms.toString() === bathrooms);
+      }
+      if (propertyType) {
+        filtered = filtered.filter(p => p.type && p.type.toLowerCase() === propertyType.toLowerCase());
+      }
+
+      setProperties(filtered);
+      setMessage(`✓ Found ${filtered.length} properties`);
       setTimeout(() => setMessage(''), 3000);
     } catch (err) {
       setMessage('✗ Filter failed');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setMinPrice('');
+    setMaxPrice('');
+    setBedrooms('');
+    setBathrooms('');
+    setPropertyType('');
+    loadProperties();
   };
 
   const handleAddFavorite = async (propertyId) => {
@@ -174,35 +212,213 @@ export const BuyerDashboard = () => {
 
       {activeTab === 'properties' && (
         <div>
-          <form onSubmit={handleFilter} className="filter-form">
-            <select value={filterType} onChange={(e) => setFilterType(e.target.value)}>
-              <option value="all">All Properties</option>
-              <option value="location">Search by Location</option>
-              <option value="price">Search by Price (min-max)</option>
-            </select>
+          {/* Search Bar */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginBottom: '16px' }}>
+            <input
+              type="text"
+              placeholder="🔍 Search properties by title, location, description..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                flex: 1,
+                padding: '12px 16px',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                backgroundColor: 'var(--surface-3)',
+                color: 'var(--text-main)',
+                fontSize: '0.95rem'
+              }}
+            />
+            <button 
+              type="button"
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              style={{
+                padding: '12px 16px',
+                backgroundColor: showAdvancedFilters ? 'var(--primary)' : 'var(--surface-3)',
+                color: showAdvancedFilters ? 'white' : 'var(--text-main)',
+                border: '1px solid var(--border)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '600',
+                fontSize: '0.9rem',
+                transition: 'all 0.3s ease',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}
+            >
+              ⚙️ {showAdvancedFilters ? 'Hide' : 'Filters'}
+            </button>
+          </div>
 
-            {filterType === 'location' && (
-              <input
-                type="text"
-                placeholder="Enter location"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
-            )}
+          {/* Advanced Filters - Inline Layout */}
+          {showAdvancedFilters && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: '12px',
+              marginBottom: '16px',
+              padding: '0'
+            }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Min Price</label>
+                <input
+                  type="number"
+                  placeholder="Min"
+                  value={minPrice}
+                  onChange={(e) => setMinPrice(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--surface-3)',
+                    color: 'var(--text-main)',
+                    fontSize: '0.9rem',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
 
-            {filterType === 'price' && (
-              <input
-                type="text"
-                placeholder="e.g., 100000-500000"
-                value={filterValue}
-                onChange={(e) => setFilterValue(e.target.value)}
-              />
-            )}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Max Price</label>
+                <input
+                  type="number"
+                  placeholder="Max"
+                  value={maxPrice}
+                  onChange={(e) => setMaxPrice(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--surface-3)',
+                    color: 'var(--text-main)',
+                    fontSize: '0.9rem',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
 
-            <button type="submit" disabled={loading}>{loading ? 'Filtering...' : 'Apply Filter'}</button>
-          </form>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bedrooms</label>
+                <select
+                  value={bedrooms}
+                  onChange={(e) => setBedrooms(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--surface-3)',
+                    color: 'var(--text-main)',
+                    fontSize: '0.9rem',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <option value="">Any</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4+</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Bathrooms</label>
+                <select
+                  value={bathrooms}
+                  onChange={(e) => setBathrooms(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--surface-3)',
+                    color: 'var(--text-main)',
+                    fontSize: '0.9rem',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <option value="">Any</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3+</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Property Type</label>
+                <select
+                  value={propertyType}
+                  onChange={(e) => setPropertyType(e.target.value)}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    backgroundColor: 'var(--surface-3)',
+                    color: 'var(--text-main)',
+                    fontSize: '0.9rem',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <option value="">Any</option>
+                  <option value="apartment">Apartment</option>
+                  <option value="house">House</option>
+                  <option value="villa">Villa</option>
+                  <option value="townhouse">Townhouse</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Action</label>
+                <button
+                  type="button"
+                  onClick={handleResetFilters}
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    backgroundColor: 'var(--surface-3)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    color: 'var(--text-muted)',
+                    cursor: 'pointer',
+                    fontSize: '0.9rem',
+                    fontWeight: '600',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  ↻ Reset
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Search Button - Only shows when filters visible */}
+          {showAdvancedFilters && (
+            <button 
+              onClick={handleFilter}
+              disabled={loading}
+              style={{
+                width: '100%',
+                padding: '12px 24px',
+                backgroundColor: 'var(--primary)',
+                color: 'white',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: loading ? 'not-allowed' : 'pointer',
+                fontWeight: '600',
+                fontSize: '0.95rem',
+                marginBottom: '24px',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              {loading ? '🔎 Searching...' : '🔎 Apply Filters'}
+            </button>
+          )}
+          <h3 style={{ marginBottom: '16px' }}>Available Properties ({properties.length})</h3>
           <div className="properties-grid">
-            <h3>Available Properties ({properties.length})</h3>
             {properties.length === 0 ? (
               <p>No properties found</p>
             ) : (
@@ -255,10 +471,10 @@ export const BuyerDashboard = () => {
 
       {activeTab === 'favorites' && (
         <div className="favorites-section">
-          <h3>My Favorites ({favorites.length})</h3>
+          <h3 style={{ marginBottom: '16px' }}>My Favorites ({favorites.length})</h3>
           <div className="properties-grid">
-            {properties.filter(p => favorites.includes(p.id)).length === 0 ? (
-              <p>No favorites yet</p>
+              {properties.filter(p => favorites.includes(p.id) && !p.sold).length === 0 ? (
+                <p>No available favorites</p>
             ) : (
               properties.filter(p => favorites.includes(p.id)).map(prop => (
                 <div key={prop.id} className="property-card" onClick={() => setSelectedProperty(prop)} style={{ cursor: 'pointer' }}>
@@ -331,8 +547,9 @@ export const BuyerDashboard = () => {
                         <span style={{
                           padding: '4px 8px',
                           borderRadius: '4px',
-                          backgroundColor: tx.type === 'CREDIT' ? '#c8e6c9' : '#ffcdd2',
-                          color: tx.type === 'CREDIT' ? '#2e7d32' : '#c62828'
+                          backgroundColor: tx.type === 'CREDIT' ? '#2e7d32' : '#ffcdd2',
+                          color: 'white',
+                          fontWeight: 'bold'
                         }}>
                           {tx.type === 'CREDIT' ? '+ ' : '- '}₹{tx.amount}
                         </span>
@@ -406,7 +623,21 @@ export const BuyerDashboard = () => {
 
       {showBuyDialog && buyingProperty && (
         <div className="modal-overlay">
-          <div className="modal-card">
+          <div className="modal-card" style={{ maxWidth: '500px', textAlign: 'left' }}>
+            {buyingProperty.imageUrl && (
+              <img
+                src={buyingProperty.imageUrl}
+                alt={buyingProperty.title}
+                style={{
+                  width: '100%',
+                  height: '200px',
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  marginBottom: '20px',
+                  display: 'block'
+                }}
+              />
+            )}
             <h2>Confirm Purchase</h2>
             <p>Property: <strong>{buyingProperty.title}</strong></p>
             <p>Location: <strong>{buyingProperty.location}</strong></p>
@@ -423,14 +654,19 @@ export const BuyerDashboard = () => {
               </p>
             )}
 
-            <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
-              <button onClick={() => setShowBuyDialog(false)} className="btn-fav">
+            <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+              <button
+                onClick={() => setShowBuyDialog(false)}
+                className="btn-fav"
+                style={{ flex: 1, padding: '12px', fontSize: '0.95rem' }}
+              >
                 Cancel
               </button>
               <button
                 onClick={handleConfirmBuy}
                 disabled={loading || balance < (buyingProperty.price + 100)}
                 className="btn-buy"
+                style={{ flex: 1, padding: '12px', fontSize: '0.95rem' }}
               >
                 {loading ? 'Processing...' : 'Confirm'}
               </button>

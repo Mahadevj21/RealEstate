@@ -51,6 +51,9 @@ public class DataInitializer {
         p1.setDescription("A beautiful 3BHK house in prime location");
         p1.setLocation("Downtown");
         p1.setPrice(150);
+        p1.setBedrooms(3);
+        p1.setBathrooms(2);
+        p1.setType("house");
         p1.setImageUrl(null);
         p1.setSeller(seller);
         propertyRepository.save(p1);
@@ -60,6 +63,9 @@ public class DataInitializer {
         p2.setDescription("Modern 2BHK apartment with all amenities");
         p2.setLocation("City Center");
         p2.setPrice(200);
+        p2.setBedrooms(2);
+        p2.setBathrooms(1);
+        p2.setType("apartment");
         p2.setImageUrl(null);
         p2.setSeller(seller);
         propertyRepository.save(p2);

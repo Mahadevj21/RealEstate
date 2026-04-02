@@ -21,6 +21,9 @@ public class Property {
     private String description;
     private double price;
     private String location;
+    private Integer bedrooms;
+    private Integer bathrooms;
+    private String type; // apartment, house, villa, townhouse
     
     @Column(columnDefinition = "TEXT")
     private String imageUrl;
@@ -63,4 +66,13 @@ public class Property {
 
     public boolean isSold() { return sold; }
     public void setSold(boolean sold) { this.sold = sold; }
+
+    public Integer getBedrooms() { return bedrooms; }
+    public void setBedrooms(Integer bedrooms) { this.bedrooms = bedrooms; }
+
+    public Integer getBathrooms() { return bathrooms; }
+    public void setBathrooms(Integer bathrooms) { this.bathrooms = bathrooms; }
+
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
 }

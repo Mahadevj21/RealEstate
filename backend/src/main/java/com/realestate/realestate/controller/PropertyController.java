@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.realestate.realestate.entity.Property;
 import com.realestate.realestate.entity.User;
+import com.realestate.realestate.repository.DealRepository;
 import com.realestate.realestate.repository.PropertyRepository;
 import com.realestate.realestate.repository.UserRepository;
 
@@ -26,6 +27,7 @@ public class PropertyController {
 
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
+    private final DealRepository dealRepository;
 
     @PostMapping("/add/{sellerId}")
     public Property addProperty(
@@ -52,20 +54,23 @@ public class PropertyController {
     @DeleteMapping("/{propertyId}")
     public ResponseEntity<?> deleteProperty(@PathVariable Long propertyId) {
         try {
-            Property property = propertyRepository.findById(propertyId)
-                    .orElseThrow(() -> new RuntimeException("Property not found"));
+            if (!propertyRepository.existsById(propertyId)) {
+                return ResponseEntity.status(404).body(new java.util.HashMap<String, String>() {{
+                    put("error", "Property not found");
+                }});
+            }
             
-            // First delete all favorites linked to this property
-            // (In case there are any foreign key constraints)
-            propertyRepository.delete(property);
+            // Delete all deals associated with this property first (foreign key constraint)
+            dealRepository.deleteAll(dealRepository.findByPropertyId(propertyId));
             
-            return ResponseEntity.ok(new java.util.HashMap<String, String>() {{
-                put("message", "Property deleted successfully");
-                put("id", propertyId.toString());
-            }});
+            // Now delete the property
+            propertyRepository.deleteById(propertyId);
+            return ResponseEntity.noContent().build();
         } catch (Exception e) {
+            System.out.println("Error deleting property: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.status(500).body(new java.util.HashMap<String, String>() {{
-                put("error", e.getMessage());
+                put("error", "Failed to delete: " + e.getMessage());
             }});
         }
     }
