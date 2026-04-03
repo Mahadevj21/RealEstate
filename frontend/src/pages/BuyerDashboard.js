@@ -1,7 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/apiService';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import L from 'leaflet';
 import '../styles/Dashboard.css';
+
+const cityCoordinates = {
+  mumbai: [19.0760, 72.8777],
+  delhi: [28.7041, 77.1025],
+  bangalore: [12.9716, 77.5946],
+  chennai: [13.0827, 80.2707],
+  kochi: [9.9312, 76.2673],
+  pune: [18.5204, 73.8567],
+  hyderabad: [17.3850, 78.4867],
+  kolkata: [22.5726, 88.3639],
+  ahmedabad: [23.0225, 72.5714]
+};
+
+const getPropertyLocation = (prop) => {
+  const locStr = (prop.location || '').toLowerCase();
+  for (const city in cityCoordinates) {
+    if (locStr.includes(city)) {
+      // Add slight random offset so markers don't overlap completely
+      return [
+        cityCoordinates[city][0] + (Math.random() - 0.5) * 0.05,
+        cityCoordinates[city][1] + (Math.random() - 0.5) * 0.05
+      ];
+    }
+  }
+  // Default to somewhere near central India if not found
+  return [21.1458 + (prop.id % 10) * 0.5, 79.0882 + (prop.id % 5) * 0.5];
+};
+
+const createPriceIcon = (price) => {
+  return L.divIcon({
+    className: 'custom-price-pin',
+    html: `<div style="background:var(--grad-aurora);color:white;padding:6px 12px;border-radius:20px;font-weight:700;white-space:nowrap;box-shadow:0 4px 6px rgba(0,0,0,0.3); font-size: 0.85rem; border: 2px solid white;">₹${(price/100000).toFixed(1)}L</div>`,
+    iconAnchor: [30, 15] 
+  });
+};
 
 export const BuyerDashboard = () => {
   const { user } = useAuth();
@@ -22,6 +59,7 @@ export const BuyerDashboard = () => {
   const [buyingProperty, setBuyingProperty] = useState(null);
   const [activeTab, setActiveTab] = useState('properties');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'map'
 
   useEffect(() => {
     loadProperties();
@@ -229,7 +267,7 @@ export const BuyerDashboard = () => {
                 fontSize: '0.95rem'
               }}
             />
-            <button 
+            <button
               type="button"
               onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
               style={{
@@ -397,7 +435,7 @@ export const BuyerDashboard = () => {
 
           {/* Search Button - Only shows when filters visible */}
           {showAdvancedFilters && (
-            <button 
+            <button
               onClick={handleFilter}
               disabled={loading}
               style={{
@@ -417,60 +455,110 @@ export const BuyerDashboard = () => {
               {loading ? '🔎 Searching...' : '🔎 Apply Filters'}
             </button>
           )}
-          <h3 style={{ marginBottom: '16px' }}>Available Properties ({properties.length})</h3>
-          <div className="properties-grid">
-            {properties.length === 0 ? (
-              <p>No properties found</p>
-            ) : (
-              properties.map(prop => (
-                <div key={prop.id} className="property-card" onClick={() => setSelectedProperty(prop)} style={{ cursor: 'pointer' }}>
-                  {prop.imageUrl && (
-                    <img src={prop.imageUrl} alt={prop.title} className="property-image" />
-                  )}
-                  <h4>{prop.title}</h4>
-                  <p>{prop.description}</p>
-                  <p><strong>₹ {prop.price.toLocaleString()}</strong> - {prop.location}</p>
-                  <p style={{ display: 'flex', gap: '15px', color: '#666', fontSize: '0.9em', margin: '5px 0' }}>
-                    <span>🛏️ {prop.bedrooms || 0} Beds</span>
-                    <span>🛁 {prop.bathrooms || 0} Baths</span>
-                    <span style={{ textTransform: 'capitalize' }}>🏠 {prop.type || 'N/A'}</span>
-                  </p>
-                  <p style={{ color: prop.sold ? 'red' : 'green', fontWeight: 'bold' }}>
-                    {prop.sold ? '❌ SOLD' : '✓ Available'}
-                  </p>
-                  <div className="card-actions">
-                    {!prop.sold && (
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleBuyClick(prop); }}
-                        className="btn-buy"
-                        disabled={loading || balance < (prop.price + 100)}
-                        style={{
-                          backgroundColor: balance < (prop.price + 100) ? '#ccc' : '#ff6b6b',
-                          color: 'white',
-                          padding: '8px 12px',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: balance < (prop.price + 100) ? 'not-allowed' : 'pointer',
-                          marginRight: '5px'
-                        }}
-                      >
-                        🛒 Buy (₹{(prop.price + 100).toLocaleString()})
-                      </button>
-                    )}
-                    {favorites.includes(prop.id) ? (
-                      <button onClick={(e) => { e.stopPropagation(); handleRemoveFavorite(prop.id); }} className="btn-fav-active">
-                        ❤ Favorited
-                      </button>
-                    ) : (
-                      <button onClick={(e) => { e.stopPropagation(); handleAddFavorite(prop.id); }} className="btn-fav">
-                        ♡ Add to Favorites
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ margin: 0 }}>Available Properties ({properties.length})</h3>
+            <div style={{ display: 'flex', gap: '8px', background: 'var(--surface-2)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border)' }}>
+              <button 
+                onClick={() => setViewMode('grid')} 
+                style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: viewMode === 'grid' ? 'var(--primary)' : 'transparent', color: viewMode === 'grid' ? 'white' : 'var(--text-main)', fontWeight: 'bold' }}
+              >
+                ⊞ Grid
+              </button>
+              <button 
+                onClick={() => setViewMode('map')} 
+                style={{ padding: '6px 12px', border: 'none', borderRadius: '6px', cursor: 'pointer', background: viewMode === 'map' ? 'var(--primary)' : 'transparent', color: viewMode === 'map' ? 'white' : 'var(--text-main)', fontWeight: 'bold' }}
+              >
+                🗺️ Map
+              </button>
+            </div>
           </div>
+          
+          {viewMode === 'map' ? (
+            <div style={{ height: '600px', width: '100%', borderRadius: '12px', overflow: 'hidden', border: '1px solid var(--border)', zIndex: 0 }}>
+              <MapContainer center={[20.5937, 78.9629]} zoom={5} style={{ height: '100%', width: '100%' }}>
+                <TileLayer
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                />
+                {properties.map(prop => (
+                  <Marker 
+                    key={prop.id} 
+                    position={getPropertyLocation(prop)} 
+                    icon={createPriceIcon(prop.price)}
+                  >
+                    <Popup>
+                      <div style={{ maxWidth: '200px', cursor: 'pointer' }} onClick={() => setSelectedProperty(prop)}>
+                        {prop.imageUrl && <img src={prop.imageUrl} alt={prop.title} style={{ width: '100%', height: '100px', objectFit: 'cover', borderRadius: '8px', marginBottom: '8px' }} />}
+                        <h4 style={{ margin: '0 0 5px 0' }}>{prop.title}</h4>
+                        <p style={{ margin: '0 0 5px 0', fontWeight: 'bold', color: 'var(--primary)' }}>₹ {prop.price.toLocaleString()}</p>
+                        <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem' }}>{prop.location}</p>
+                        <p style={{ margin: '0', fontSize: '0.8rem', color: prop.sold ? 'red' : 'green' }}>
+                          {prop.sold ? '❌ SOLD' : '✓ Available'}
+                        </p>
+                        <button style={{ width: '100%', padding: '6px', marginTop: '8px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+                          View Details
+                        </button>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
+          ) : (
+            <div className="properties-grid">
+              {properties.length === 0 ? (
+                <p>No properties found</p>
+              ) : (
+                properties.map(prop => (
+                  <div key={prop.id} className="property-card" onClick={() => setSelectedProperty(prop)} style={{ cursor: 'pointer' }}>
+                    {prop.imageUrl && (
+                      <img src={prop.imageUrl} alt={prop.title} className="property-image" />
+                    )}
+                    <h4>{prop.title}</h4>
+                    <p>{prop.description}</p>
+                    <p><strong>₹ {prop.price.toLocaleString()}</strong> - {prop.location}</p>
+                    <p style={{ display: 'flex', gap: '15px', color: '#666', fontSize: '0.9em', margin: '5px 0' }}>
+                      <span>🛏️ {prop.bedrooms || 0} Beds</span>
+                      <span>🛁 {prop.bathrooms || 0} Baths</span>
+                      <span style={{ textTransform: 'capitalize' }}>🏠 {prop.type || 'N/A'}</span>
+                    </p>
+                    <p style={{ color: prop.sold ? 'red' : 'green', fontWeight: 'bold' }}>
+                      {prop.sold ? '❌ SOLD' : '✓ Available'}
+                    </p>
+                    <div className="card-actions">
+                      {!prop.sold && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); handleBuyClick(prop); }}
+                          className="btn-buy"
+                          disabled={loading || balance < (prop.price + 100)}
+                          style={{
+                            backgroundColor: balance < (prop.price + 100) ? '#ccc' : '#ff6b6b',
+                            color: 'white',
+                            padding: '8px 12px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            cursor: balance < (prop.price + 100) ? 'not-allowed' : 'pointer',
+                            marginRight: '5px'
+                          }}
+                        >
+                          🛒 Buy (₹{(prop.price + 100).toLocaleString()})
+                        </button>
+                      )}
+                      {favorites.includes(prop.id) ? (
+                        <button onClick={(e) => { e.stopPropagation(); handleRemoveFavorite(prop.id); }} className="btn-fav-active">
+                          ❤ Favorited
+                        </button>
+                      ) : (
+                        <button onClick={(e) => { e.stopPropagation(); handleAddFavorite(prop.id); }} className="btn-fav">
+                          ♡ Add to Favorites
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       )}
 
@@ -478,8 +566,8 @@ export const BuyerDashboard = () => {
         <div className="favorites-section">
           <h3 style={{ marginBottom: '16px' }}>My Favorites ({favorites.length})</h3>
           <div className="properties-grid">
-              {properties.filter(p => favorites.includes(p.id) && !p.sold).length === 0 ? (
-                <p>No available favorites</p>
+            {properties.filter(p => favorites.includes(p.id) && !p.sold).length === 0 ? (
+              <p>No available favorites</p>
             ) : (
               properties.filter(p => favorites.includes(p.id)).map(prop => (
                 <div key={prop.id} className="property-card" onClick={() => setSelectedProperty(prop)} style={{ cursor: 'pointer' }}>

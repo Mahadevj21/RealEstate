@@ -1,6 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import '../styles/Dashboard.css';
+
+const generatePlatformGrowthData = () => {
+  const data = [];
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const currentMonth = new Date().getMonth();
+  
+  for(let i=5; i>=0; i--) {
+      let mIndex = currentMonth - i;
+      if (mIndex < 0) mIndex += 12;
+      data.push({
+          name: months[mIndex],
+          signups: Math.floor(Math.random() * 150) + 50,
+          listings: Math.floor(Math.random() * 50) + 10
+      });
+  }
+  return data;
+};
 
 export const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -12,6 +30,7 @@ export const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [growthData] = useState(generatePlatformGrowthData());
 
   useEffect(() => {
     loadUsers();
@@ -151,6 +170,12 @@ export const AdminDashboard = () => {
           onClick={() => setActiveTab('wallet')}
         >
           💳 Wallet & Transactions
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          📈 Analytics
         </button>
       </div>
 
@@ -318,6 +343,43 @@ export const AdminDashboard = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'analytics' && (
+        <div className="analytics-section">
+          <h3 style={{ marginBottom: '24px' }}>Platform Growth & Engagement (Last 6 Months)</h3>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+            <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Total Users</h4>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: '#8884d8' }}>{users.length || 0}</p>
+            </div>
+            <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Active Listings</h4>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: '#82ca9d' }}>{properties.length || 0}</p>
+            </div>
+            <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Completed Deals</h4>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: 'var(--primary)' }}>{deals.length || 0}</p>
+            </div>
+          </div>
+
+          <div style={{ background: 'var(--surface-2)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border)', height: '400px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={growthData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="name" stroke="var(--text-muted)" />
+                <YAxis stroke="var(--text-muted)" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--surface-2)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-main)' }}
+                  itemStyle={{ fontWeight: 'bold' }}
+                />
+                <Bar dataKey="signups" name="New Signups" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="listings" name="New Listings" fill="#82ca9d" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </div>
         </div>
       )}

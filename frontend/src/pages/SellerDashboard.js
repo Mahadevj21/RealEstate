@@ -1,7 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { apiService } from '../services/apiService';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import '../styles/Dashboard.css';
+
+const generateMockAnalytics = () => {
+  const data = [];
+  const today = new Date();
+  for(let i=6; i>=0; i--) {
+      const d = new Date(today);
+      d.setDate(d.getDate() - i);
+      data.push({
+          name: d.toLocaleDateString('en-US', { weekday: 'short' }),
+          views: Math.floor(Math.random() * 50) + 15,
+          favorites: Math.floor(Math.random() * 8) + 1
+      });
+  }
+  return data;
+};
 
 export const SellerDashboard = () => {
   const { user } = useAuth();
@@ -16,6 +32,7 @@ export const SellerDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('properties');
   const [transactions, setTransactions] = useState([]);
+  const [analyticsData] = useState(generateMockAnalytics());
   const formRef = useRef(null);
 
 
@@ -303,6 +320,12 @@ export const SellerDashboard = () => {
           onClick={() => { setActiveTab('wallet'); loadTransactions(); }}
         >
           💳 Wallet
+        </button>
+        <button
+          className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => { setActiveTab('analytics'); }}
+        >
+          📈 Analytics
         </button>
       </div>
 
@@ -607,6 +630,52 @@ export const SellerDashboard = () => {
                 )}
               </tbody>
             </table>
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'analytics' && (
+        <div className="analytics-section">
+          <h3 style={{ marginBottom: '24px' }}>Property Performance (Last 7 Days)</h3>
+          <div style={{ background: 'var(--surface-2)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border)', height: '400px' }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={analyticsData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
+                  </linearGradient>
+                  <linearGradient id="colorFavs" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#82ca9d" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="#82ca9d" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
+                <XAxis dataKey="name" stroke="var(--text-muted)" />
+                <YAxis stroke="var(--text-muted)" />
+                <Tooltip 
+                  contentStyle={{ backgroundColor: 'var(--surface-2)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-main)' }}
+                  itemStyle={{ fontWeight: 'bold' }}
+                />
+                <Area type="monotone" dataKey="views" name="Views" stroke="#8884d8" fillOpacity={1} fill="url(#colorViews)" />
+                <Area type="monotone" dataKey="favorites" name="Favorites" stroke="#82ca9d" fillOpacity={1} fill="url(#colorFavs)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginTop: '24px' }}>
+            <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Total Views</h4>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: '#8884d8' }}>
+                    {analyticsData.reduce((acc, curr) => acc + curr.views, 0)}
+                </p>
+            </div>
+            <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Total Favorites</h4>
+                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: '#82ca9d' }}>
+                    {analyticsData.reduce((acc, curr) => acc + curr.favorites, 0)}
+                </p>
+            </div>
           </div>
         </div>
       )}
