@@ -1,6 +1,6 @@
 # 🏡 PropManage - Real Estate Management System
 
-A comprehensive, full-stack real estate property management application designed to provide a seamless experience for buyers looking for homes, sellers managing their listings, and administrators overseeing the platform.
+A comprehensive, full-stack real estate property management application designed to provide a seamless experience for buyers looking for homes, sellers managing their listings, and administrators overseeing the platform ecosystem.
 
 ---
 
@@ -11,22 +11,26 @@ This application features dedicated dashboards tailored to three primary user ro
 ### 🛡️ Admin
 - **User Management**: Monitor platform users with the ability to block or unblock accounts.
 - **Listing Moderation**: Full administrative control over properties, including the ability to remove listings that violate platform standards.
-- **Dashboard Overview**: Access a centralized view of system activity and user distribution.
+- **Analytics & Reporting**: Interactive data visualizations (powered by Recharts) showing system activity, user distribution, and platform growth.
+- **Platform Wallet**: The admin collects a standardized brokerage fee on every successful property transaction, with a dedicated ledger to view platform earnings.
 
 ### 🏠 Seller
-- **Property Management**: Create and list new properties dynamically.
-- **Inventory Control**: Update existing property details seamlessly using intuitive, inline edit forms designed for optimal user experience.
-- **Listing Deletion**: Remove properties from the market when they are sold or no longer available.
+- **Property Management**: Create and list new properties dynamically with image uploads, dynamic pricing, and structural details (beds/baths).
+- **Deal Management**: View incoming purchase requests directly from interested buyers. Accept or reject offers with a single click.
+- **Wallet & Transactions**: A custom digital wallet to receive funds upon successful property sales, featuring a complete transaction ledger.
+- **Seller Analytics**: Visual performance metrics tracking cash balances and active property listing volumes.
 
 ### 🔑 Buyer
-- **Property Discovery**: Browse an expansive list of available real estate properties.
-- **Advanced Filtering**: Quickly find the perfect home by filtering properties based on specific criteria like location and price.
+- **Property Discovery**: Browse an expansive list of available real estate properties through dynamic grids.
+- **Interactive Map View**: Discover properties geographically using an integrated interactive map (powered by Leaflet).
+- **Advanced Filtering**: Quickly find the perfect home by filtering properties based on criteria like location, minimum/maximum price, bedrooms, and property type.
+- **Digital Wallet Purchasing**: Buyers can trigger property purchases using their digital wallet, sending funds securely into escrow pending seller approval.
 - **Favorites**: Bookmark favorite properties to review or make decisions on later.
 
 ### 🎨 General Platform Enhancements
-- **Dynamic UI/UX**: Clean, responsive, and modern interface built with robust CSS.
-- **Interactive Modals**: Readily accessible Settings and FAQ modals to guide the onboarding process and improve clarity.
-- **Robust Authentication Context**: Secure login and consistent state tracking across all views.
+- **Dynamic UI/UX**: Clean, responsive, and modern interface built with robust Vanilla CSS.
+- **Humanized Codebase**: Professionally structured backend controllers and frontend components.
+- **Robust Authentication**: Secure login and consistent state tracking via React Context API.
 
 ---
 
@@ -34,14 +38,17 @@ This application features dedicated dashboards tailored to three primary user ro
 
 **Frontend**
 - **Framework**: React.js
-- **Styling**: Vanilla CSS / CSS Modules
+- **Styling**: Vanilla CSS
+- **Data Visualization**: Recharts
+- **Mapping**: React-Leaflet
 - **State Management**: React Context API
-- **Build Tool**: Create React App / NPM
+- **HTTP Client**: API Fetch Service
 
 **Backend**
-- **Framework**: Spring Boot (Java 17)
+- **Framework**: Java 17 / Spring Boot 3
 - **Database**: PostgreSQL
 - **ORM**: Hibernate / Spring Data JPA
+- **Architecture**: MVC / REST API
 - **Build Tool**: Maven
 
 ---
@@ -69,14 +76,14 @@ Edit `backend/src/main/resources/application.properties`:
 ```properties
 spring.datasource.url=jdbc:postgresql://localhost:5432/RealEstate
 spring.datasource.username=postgres
-spring.datasource.password=----
+spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
 ```
 
 Run the Spring Boot Application:
 ```bash
 cd backend
-mvn spring-boot:run
+mvnw spring-boot:run
 ```
 *The backend API will be available on `http://localhost:8080`*
 
@@ -92,6 +99,6 @@ npm start
 ---
 
 ## ✅ Status
-**Production Ready** | Version 1.2.0
+**Production Ready** | Version 1.5.0
 
 *Thank you for exploring PropManage! Feel free to contribute or report any issues.*
