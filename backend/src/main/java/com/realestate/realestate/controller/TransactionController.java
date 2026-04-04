@@ -23,11 +23,11 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final UserRepository userRepository;
 
-    // Get wallet balance for a user
     @GetMapping("/{userId}/balance")
     public Map<String, Object> getWalletBalance(@PathVariable Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        
         return Map.of(
             "userId", user.getId(),
             "username", user.getUsername(),
@@ -35,7 +35,6 @@ public class TransactionController {
         );
     }
 
-    // Get transaction history for a user
     @GetMapping("/{userId}/transactions")
     public List<Transaction> getTransactionHistory(@PathVariable Long userId) {
         userRepository.findById(userId)
@@ -43,7 +42,6 @@ public class TransactionController {
         return transactionService.getTransactionsByUserId(userId);
     }
 
-    // Get single transaction
     @GetMapping("/transaction/{transactionId}")
     public Transaction getTransaction(@PathVariable Long transactionId) {
         return transactionService.getTransactionById(transactionId);

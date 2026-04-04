@@ -13,22 +13,17 @@ import com.realestate.realestate.repository.DealRepository;
 import com.realestate.realestate.repository.PropertyRepository;
 import com.realestate.realestate.repository.UserRepository;
 
+import lombok.RequiredArgsConstructor;
+
 @Service
+@RequiredArgsConstructor
 public class DealService {
 
     private final PropertyRepository propertyRepository;
     private final UserRepository userRepository;
     private final DealRepository dealRepository;
-    private final com.realestate.realestate.service.TransactionService transactionService;
+    private final TransactionService transactionService;
 
-    public DealService(PropertyRepository propertyRepository, UserRepository userRepository, DealRepository dealRepository, com.realestate.realestate.service.TransactionService transactionService) {
-        this.propertyRepository = propertyRepository;
-        this.userRepository = userRepository;
-        this.dealRepository = dealRepository;
-        this.transactionService = transactionService;
-    }
-
-    // Buyer creates a deal request
     public Deal createDealRequest(Long propertyId, Long buyerId) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
@@ -45,7 +40,6 @@ public class DealService {
             throw new RuntimeException("Seller not found");
         }
 
-        // Check if buyer has sufficient balance
         if (buyer.getBalance() < property.getPrice()) {
             throw new RuntimeException("Insufficient balance. Required: " + property.getPrice() + ", Available: " + buyer.getBalance());
         }
@@ -60,7 +54,6 @@ public class DealService {
         return dealRepository.save(deal);
     }
 
-    // Seller accepts deal
     public String acceptDeal(Long dealId) {
         Deal deal = dealRepository.findById(dealId)
                 .orElseThrow(() -> new RuntimeException("Deal not found"));
@@ -72,11 +65,9 @@ public class DealService {
         deal.setStatus(Deal.DealStatus.ACCEPTED);
         dealRepository.save(deal);
 
-        // Finalize the deal
         return finalizeDeal(dealId);
     }
 
-    // Seller rejects deal
     public String rejectDeal(Long dealId) {
         Deal deal = dealRepository.findById(dealId)
                 .orElseThrow(() -> new RuntimeException("Deal not found"));
@@ -91,7 +82,6 @@ public class DealService {
         return "Deal rejected successfully";
     }
 
-    // Finalize deal and transfer balance
     private String finalizeDeal(Long dealId) {
         Deal deal = dealRepository.findById(dealId)
                 .orElseThrow(() -> new RuntimeException("Deal not found"));
@@ -100,106 +90,65 @@ public class DealService {
         User seller = deal.getSeller();
         Property property = deal.getProperty();
 
-        User admin = userRepository.findAll()
-                .stream()
+        User admin = userRepository.findAll().stream()
                 .filter(u -> u.getRole() == User.Role.ADMIN)
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Admin not found"));
 
-        // Check buyer balance - needs property price + 100 brokerage
-        if (buyer.getBalance() < (int) deal.getAmount() + 100) {
-            throw new RuntimeException("Insufficient balance for buyer. Required: " + (deal.getAmount() + 100) + ", Available: " + buyer.getBalance());
+        double propertyPrice = deal.getAmount();
+        double brokerageFee = 100.0;
+
+        if (buyer.getBalance() < propertyPrice + brokerageFee) {
+            throw new RuntimeException("Insufficient balance for buyer.");
         }
 
-        // Check seller balance - needs 100 brokerage
-        if (seller.getBalance() < 100) {
-            throw new RuntimeException("Insufficient balance for seller. Required: 100, Available: " + seller.getBalance());
+        if (seller.getBalance() < brokerageFee) {
+            throw new RuntimeException("Insufficient balance for seller.");
         }
 
-        // Transfer balance:
-        // Buyer pays seller the property price
-        buyer.setBalance((int) (buyer.getBalance() - deal.getAmount()));
-        seller.setBalance((int) (seller.getBalance() + deal.getAmount()));
-        
-        // Buyer pays admin 100 brokerage
-        buyer.setBalance((int) (buyer.getBalance() - 100));
-        admin.setBalance((int) (admin.getBalance() + 100));
-        
-        // Seller pays admin 100 brokerage
-        seller.setBalance((int) (seller.getBalance() - 100));
-        admin.setBalance((int) (admin.getBalance() + 100));
+        // Handle balance transfers
+        buyer.setBalance(buyer.getBalance() - propertyPrice - brokerageFee);
+        seller.setBalance(seller.getBalance() + propertyPrice - brokerageFee);
+        admin.setBalance(admin.getBalance() + (brokerageFee * 2));
 
         property.setSold(true);
-
         deal.setStatus(Deal.DealStatus.COMPLETED);
         deal.setCompletedAt(LocalDateTime.now());
 
-        // Persist balances and property
         userRepository.save(buyer);
         userRepository.save(seller);
         userRepository.save(admin);
         propertyRepository.save(property);
-
-        // Record transactions
-        // Buyer pays seller the property price
-        Transaction tBuyer = new Transaction();
-        tBuyer.setUser(buyer);
-        tBuyer.setAmount(deal.getAmount());
-        tBuyer.setType("DEBIT");
-        tBuyer.setDescription("Paid ₹" + deal.getAmount() + " to seller for property id: " + property.getId() + " (deal:" + deal.getId() + ")");
-        transactionService.save(tBuyer);
-
-        // Seller receives property price
-        Transaction tSeller = new Transaction();
-        tSeller.setUser(seller);
-        tSeller.setAmount(deal.getAmount());
-        tSeller.setType("CREDIT");
-        tSeller.setDescription("Received ₹" + deal.getAmount() + " from buyer for property id: " + property.getId() + " (deal:" + deal.getId() + ")");
-        transactionService.save(tSeller);
-
-        // Buyer pays admin 100 brokerage
-        Transaction tBuyerBrokerage = new Transaction();
-        tBuyerBrokerage.setUser(buyer);
-        tBuyerBrokerage.setAmount(100);
-        tBuyerBrokerage.setType("DEBIT");
-        tBuyerBrokerage.setDescription("Paid ₹100 brokerage fee to admin for property id: " + property.getId() + " (deal:" + deal.getId() + ")");
-        transactionService.save(tBuyerBrokerage);
-
-        // Seller pays admin 100 brokerage
-        Transaction tSellerBrokerage = new Transaction();
-        tSellerBrokerage.setUser(seller);
-        tSellerBrokerage.setAmount(100);
-        tSellerBrokerage.setType("DEBIT");
-        tSellerBrokerage.setDescription("Paid ₹100 brokerage fee to admin for property id: " + property.getId() + " (deal:" + deal.getId() + ")");
-        transactionService.save(tSellerBrokerage);
-
-        // Admin receives 200 brokerage
-        Transaction tAdmin = new Transaction();
-        tAdmin.setUser(admin);
-        tAdmin.setAmount(200);
-        tAdmin.setType("CREDIT");
-        tAdmin.setDescription("Received ₹200 brokerage fee for property id: " + property.getId() + " (deal:" + deal.getId() + ")");
-        transactionService.save(tAdmin);
-
         dealRepository.save(deal);
+
+        saveTransaction(buyer, propertyPrice, "DEBIT", "Paid for property ID: " + property.getId());
+        saveTransaction(seller, propertyPrice, "CREDIT", "Received payment for property ID: " + property.getId());
+        saveTransaction(buyer, brokerageFee, "DEBIT", "Paid brokerage fee for property ID: " + property.getId());
+        saveTransaction(seller, brokerageFee, "DEBIT", "Paid brokerage fee for property ID: " + property.getId());
+        saveTransaction(admin, brokerageFee * 2, "CREDIT", "Received brokerage for property ID: " + property.getId());
 
         return "Deal finalized successfully";
     }
 
-    // Get all pending deals for seller
+    private void saveTransaction(User user, double amount, String type, String desc) {
+        Transaction t = new Transaction();
+        t.setUser(user);
+        t.setAmount(amount);
+        t.setType(type);
+        t.setDescription(desc);
+        transactionService.save(t);
+    }
+
     public List<Deal> getSellerPendingDeals(Long sellerId) {
-        return dealRepository.findBySellerId(sellerId)
-                .stream()
+        return dealRepository.findBySellerId(sellerId).stream()
                 .filter(d -> d.getStatus().equals(Deal.DealStatus.PENDING))
                 .toList();
     }
 
-    // Get all deals for buyer
     public List<Deal> getBuyerDeals(Long buyerId) {
         return dealRepository.findByBuyerId(buyerId);
     }
 
-    // Get all completed deals
     public List<Deal> getCompletedDeals() {
         return dealRepository.findByStatus(Deal.DealStatus.COMPLETED);
     }

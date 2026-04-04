@@ -1,6 +1,8 @@
 package com.realestate.realestate.controller;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,45 +28,52 @@ public class SellerController {
     private final UserRepository userRepository;
     private final PropertyRepository propertyRepository;
 
-    // Get seller's pending deals
     @GetMapping("/{sellerId}/pending-deals")
     public List<Deal> getPendingDeals(@PathVariable Long sellerId) {
-        // Verify seller exists
         userRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
         return dealService.getSellerPendingDeals(sellerId);
     }
 
-    // Accept a deal
     @PostMapping("/deals/{dealId}/accept")
     public String acceptDeal(@PathVariable Long dealId) {
         return dealService.acceptDeal(dealId);
     }
 
-    // Reject a deal
     @PostMapping("/deals/{dealId}/reject")
     public String rejectDeal(@PathVariable Long dealId) {
         return dealService.rejectDeal(dealId);
     }
 
-    // Get seller's balance
     @GetMapping("/{sellerId}/balance")
-    public java.util.Map<String, Object> getSellerBalance(@PathVariable Long sellerId) {
+    public Map<String, Object> getSellerBalance(@PathVariable Long sellerId) {
         User seller = userRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
-        return java.util.Map.of(
+        return Map.of(
             "id", seller.getId(),
             "username", seller.getUsername(),
             "balance", seller.getBalance()
         );
     }
 
-    // Get seller's properties
     @GetMapping("/{sellerId}/properties")
     public List<Property> getSellerProperties(@PathVariable Long sellerId) {
-        // Verify seller exists
         userRepository.findById(sellerId)
                 .orElseThrow(() -> new RuntimeException("Seller not found"));
         return propertyRepository.findBySellerId(sellerId);
+    }
+
+    @GetMapping("/{sellerId}/analytics/performance")
+    public List<Map<String, Object>> getSellerPerformance(@PathVariable Long sellerId) {
+        List<Property> props = propertyRepository.findBySellerId(sellerId);
+
+        long active = props.stream().filter(p -> !p.isSold()).count();
+        long sold = props.stream().filter(Property::isSold).count();
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        result.add(Map.of("name", "Active", "value", (double) active, "fill", "#82ca9d"));
+        result.add(Map.of("name", "Sold", "value", (double) sold, "fill", "#8884d8"));
+
+        return result;
     }
 }

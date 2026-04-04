@@ -159,4 +159,14 @@ export const apiService = {
       if (!r.ok) throw new Error('Failed to update profile');
       return r.json();
     }),
+
+  // Analytics
+  getPlatformStats: () =>
+    fetch(`${API_BASE_URL}/admin/analytics/stats`).then(r => r.json()),
+    
+  getPlatformGrowth: () =>
+    fetch(`${API_BASE_URL}/admin/analytics/growth`).then(r => r.json()),
+    
+  getSellerPerformance: (sellerId) =>
+    fetch(`${API_BASE_URL}/seller/${sellerId}/analytics/performance`).then(r => r.json()),
 };

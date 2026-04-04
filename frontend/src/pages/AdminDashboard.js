@@ -1,24 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import '../styles/Dashboard.css';
-
-const generatePlatformGrowthData = () => {
-  const data = [];
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  const currentMonth = new Date().getMonth();
-  
-  for(let i=5; i>=0; i--) {
-      let mIndex = currentMonth - i;
-      if (mIndex < 0) mIndex += 12;
-      data.push({
-          name: months[mIndex],
-          signups: Math.floor(Math.random() * 150) + 50,
-          listings: Math.floor(Math.random() * 50) + 10
-      });
-  }
-  return data;
-};
 
 export const AdminDashboard = () => {
   const [users, setUsers] = useState([]);
@@ -30,14 +13,27 @@ export const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('users');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [growthData] = useState(generatePlatformGrowthData());
+  const [growthData, setGrowthData] = useState([]);
+  const [platformStats, setPlatformStats] = useState({ totalUsers: 0, activeListings: 0, completedDeals: 0 });
 
   useEffect(() => {
     loadUsers();
     loadProperties();
     loadBalance();
     loadDeals();
+    loadAnalytics();
   }, []);
+
+  const loadAnalytics = async () => {
+    try {
+      const stats = await apiService.getPlatformStats();
+      const growth = await apiService.getPlatformGrowth();
+      setPlatformStats(stats);
+      setGrowthData(growth);
+    } catch (err) {
+      console.error('Analytics load error', err);
+    }
+  };
 
   const loadUsers = async () => {
     try {
@@ -65,7 +61,6 @@ export const AdminDashboard = () => {
       const data = await apiService.getAdminBalance();
       setBalance(data.balance);
       setAdminId(data.id);
-      // Load transactions for admin
       if (data.id) {
         loadTransactions(data.id);
       }
@@ -147,36 +142,11 @@ export const AdminDashboard = () => {
       {message && <p className="message">{message}</p>}
 
       <div className="admin-tabs">
-        <button
-          className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          👥 Manage Users
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'properties' ? 'active' : ''}`}
-          onClick={() => setActiveTab('properties')}
-        >
-          🏠 Manage Properties
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'deals' ? 'active' : ''}`}
-          onClick={() => setActiveTab('deals')}
-        >
-          💼 Completed Deals
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'wallet' ? 'active' : ''}`}
-          onClick={() => setActiveTab('wallet')}
-        >
-          💳 Wallet & Transactions
-        </button>
-        <button
-          className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`}
-          onClick={() => setActiveTab('analytics')}
-        >
-          📈 Analytics
-        </button>
+        <button className={`tab-btn ${activeTab === 'users' ? 'active' : ''}`} onClick={() => setActiveTab('users')}>👥 Manage Users</button>
+        <button className={`tab-btn ${activeTab === 'properties' ? 'active' : ''}`} onClick={() => setActiveTab('properties')}>🏠 Manage Properties</button>
+        <button className={`tab-btn ${activeTab === 'deals' ? 'active' : ''}`} onClick={() => setActiveTab('deals')}>💼 Completed Deals</button>
+        <button className={`tab-btn ${activeTab === 'wallet' ? 'active' : ''}`} onClick={() => setActiveTab('wallet')}>💳 Wallet & Transactions</button>
+        <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>📈 Analytics</button>
       </div>
 
       {activeTab === 'users' && (
@@ -203,18 +173,9 @@ export const AdminDashboard = () => {
                   <td>{u.blocked ? '🔒 Blocked' : '✓ Active'}</td>
                   <td>
                     {u.blocked ? (
-                    <button
-                      onClick={() => handleUnblockUser(u.id)}
-                      disabled={loading}
-                      className="btn-unblock"
-                      style={{ padding: '10px 16px', fontSize: '0.9rem' }}
-                    >
-                        Unblock
-                      </button>
+                    <button onClick={() => handleUnblockUser(u.id)} disabled={loading} className="btn-unblock" style={{ padding: '10px 16px', fontSize: '0.9rem' }}>Unblock</button>
                     ) : (
-                      <button onClick={() => handleBlockUser(u.id)} disabled={loading} className="btn-block">
-                        Block
-                      </button>
+                      <button onClick={() => handleBlockUser(u.id)} disabled={loading} className="btn-block">Block</button>
                     )}
                   </td>
                 </tr>
@@ -239,13 +200,7 @@ export const AdminDashboard = () => {
                   <p className="location">📍 {p.location}</p>
                   <p className="seller">Seller: {p.seller?.username}</p>
                   <p className="status">{p.sold ? '❌ Sold' : '✓ Available'}</p>
-                  <button
-                    onClick={() => handleDeleteProperty(p.id)}
-                    disabled={loading}
-                    className="btn-delete"
-                  >
-                    🗑️ Delete
-                  </button>
+                  <button onClick={() => handleDeleteProperty(p.id)} disabled={loading} className="btn-delete">🗑️ Delete</button>
                 </div>
               </div>
             ))}
@@ -333,9 +288,7 @@ export const AdminDashboard = () => {
                           {tx.type === 'CREDIT' ? '+ ' : '- '}₹{tx.amount}
                         </span>
                       </td>
-                      <td style={{ fontWeight: 'bold', color: tx.type === 'CREDIT' ? '#4CAF50' : '#f44336' }}>
-                        ₹{tx.amount}
-                      </td>
+                      <td style={{ fontWeight: 'bold', color: tx.type === 'CREDIT' ? '#4CAF50' : '#f44336' }}>₹{tx.amount}</td>
                       <td>{tx.description}</td>
                       <td>{new Date(tx.timestamp).toLocaleString()}</td>
                     </tr>
@@ -349,24 +302,28 @@ export const AdminDashboard = () => {
 
       {activeTab === 'analytics' && (
         <div className="analytics-section">
-          <h3 style={{ marginBottom: '24px' }}>Platform Growth & Engagement (Last 6 Months)</h3>
+          <h3 style={{ marginBottom: '24px' }}>Platform Activity Overview (All Time)</h3>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-            <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Total Users</h4>
-                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: '#8884d8' }}>{users.length || 0}</p>
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+            <div className="stat-card" style={{ background: 'var(--surface-2)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>TOTAL USERS</h4>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', margin: 0, color: '#8884d8' }}>{platformStats.totalUsers}</p>
             </div>
-            <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Active Listings</h4>
-                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: '#82ca9d' }}>{properties.length || 0}</p>
+            <div className="stat-card" style={{ background: 'var(--surface-2)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>ACTIVE LISTINGS</h4>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', margin: 0, color: '#82ca9d' }}>{platformStats.activeListings}</p>
             </div>
-            <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-muted)' }}>Completed Deals</h4>
-                <p style={{ fontSize: '2rem', fontWeight: 'bold', margin: 0, color: 'var(--primary)' }}>{deals.length || 0}</p>
+            <div className="stat-card" style={{ background: 'var(--surface-2)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>DEALS COMPLETED</h4>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', margin: 0, color: 'var(--primary)' }}>{platformStats.completedDeals}</p>
+            </div>
+            <div className="stat-card" style={{ background: 'var(--surface-2)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <h4 style={{ margin: '0 0 8px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>TOTAL SALES VOLUME</h4>
+                <p style={{ fontSize: '1.75rem', fontWeight: 'bold', margin: 0, color: '#ffc107' }}>₹ {(platformStats.totalVolume || 0).toLocaleString()}</p>
             </div>
           </div>
 
-          <div style={{ background: 'var(--surface-2)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border)', height: '400px' }}>
+          <div className="chart-container" style={{ background: 'var(--surface-2)', padding: '24px', borderRadius: '12px', border: '1px solid var(--border)', height: '400px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={growthData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
@@ -376,8 +333,11 @@ export const AdminDashboard = () => {
                   contentStyle={{ backgroundColor: 'var(--surface-2)', borderColor: 'var(--border)', borderRadius: '8px', color: 'var(--text-main)' }}
                   itemStyle={{ fontWeight: 'bold' }}
                 />
-                <Bar dataKey="signups" name="New Signups" fill="#8884d8" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="listings" name="New Listings" fill="#82ca9d" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                  {growthData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.fill || '#8884d8'} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

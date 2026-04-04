@@ -1,6 +1,7 @@
 package com.realestate.realestate.controller;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -34,32 +35,28 @@ public class BuyerController {
     private final FavouriteRepository favouriteRepository;
     private final DealRepository dealRepository;
 
-    // Buyer creates a deal request
     @PostMapping("/buy/{propertyId}/buyer/{buyerId}")
     public Deal buyProperty(@PathVariable Long propertyId,
                             @PathVariable Long buyerId) {
         return dealService.createDealRequest(propertyId, buyerId);
     }
 
-    // Get buyer's balance
     @GetMapping("/{buyerId}/balance")
-    public java.util.Map<String, Object> getBuyerBalance(@PathVariable Long buyerId) {
+    public Map<String, Object> getBuyerBalance(@PathVariable Long buyerId) {
         User buyer = userRepository.findById(buyerId)
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
-        return java.util.Map.of(
+        return Map.of(
             "id", buyer.getId(),
             "username", buyer.getUsername(),
             "balance", buyer.getBalance()
         );
     }
 
-    // Get buyer's deals
     @GetMapping("/{buyerId}/deals")
     public List<Deal> getBuyerDeals(@PathVariable Long buyerId) {
         return dealService.getBuyerDeals(buyerId);
     }
 
-    // Add property to favorites
     @PostMapping("/{buyerId}/favourites/{propertyId}")
     public Favourite addToFavourites(
             @PathVariable Long buyerId,
@@ -71,7 +68,6 @@ public class BuyerController {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
 
-        // Check if already in favourites
         if (favouriteRepository.findByUserIdAndPropertyId(buyerId, propertyId).isPresent()) {
             throw new RuntimeException("Property already in favourites");
         }
@@ -83,7 +79,6 @@ public class BuyerController {
         return favouriteRepository.save(favourite);
     }
 
-    // Remove property from favorites
     @DeleteMapping("/{buyerId}/favourites/{propertyId}")
     public String removeFromFavourites(
             @PathVariable Long buyerId,
@@ -96,10 +91,8 @@ public class BuyerController {
         return "Property removed from favourites";
     }
 
-    // Get buyer's favorite properties
     @GetMapping("/{buyerId}/favourites")
     public List<Property> getFavouriteProperties(@PathVariable Long buyerId) {
-        // Verify buyer exists
         userRepository.findById(buyerId)
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
 
@@ -109,28 +102,21 @@ public class BuyerController {
                 .collect(Collectors.toList());
     }
 
-    // Filter properties by location
     @GetMapping("/filter/location")
     public List<Property> filterByLocation(@RequestParam String location) {
         return propertyRepository.findByLocation(location);
     }
 
-    // Filter properties by price range
     @GetMapping("/filter/price")
-    public List<Property> filterByPrice(
-            @RequestParam double minPrice,
-            @RequestParam double maxPrice
-    ) {
+    public List<Property> filterByPrice(@RequestParam double minPrice, @RequestParam double maxPrice) {
         return propertyRepository.findByPriceBetween(minPrice, maxPrice);
     }
 
-    // Filter properties by sold status
     @GetMapping("/filter/sold")
     public List<Property> filterBySoldStatus(@RequestParam boolean sold) {
         return propertyRepository.findBySold(sold);
     }
 
-    // Advanced filter: location, price range, and sold status
     @GetMapping("/filter/advanced")
     public List<Property> advancedFilter(
             @RequestParam(required = false, defaultValue = "") String location,
@@ -144,7 +130,6 @@ public class BuyerController {
         return propertyRepository.filterProperties(location, minPrice, maxPrice, sold);
     }
 
-    // Get available properties (not sold)
     @GetMapping("/available")
     public List<Property> getAvailableProperties() {
         return propertyRepository.findBySold(false);

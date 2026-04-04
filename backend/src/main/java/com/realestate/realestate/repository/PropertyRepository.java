@@ -11,6 +11,7 @@ import com.realestate.realestate.entity.Property;
 public interface PropertyRepository extends JpaRepository<Property, Long> {
     List<Property> findByLocation(String location);
     List<Property> findBySold(boolean sold);
+    long countBySold(boolean sold);
     List<Property> findByPriceBetween(double minPrice, double maxPrice);
     List<Property> findByLocationAndSold(String location, boolean sold);
     List<Property> findByPriceBetweenAndSold(double minPrice, double maxPrice, boolean sold);
