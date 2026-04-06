@@ -173,7 +173,7 @@ export const AdminDashboard = () => {
                   <td>{u.blocked ? '🔒 Blocked' : '✓ Active'}</td>
                   <td>
                     {u.blocked ? (
-                    <button onClick={() => handleUnblockUser(u.id)} disabled={loading} className="btn-unblock" style={{ padding: '10px 16px', fontSize: '0.9rem' }}>Unblock</button>
+                    <button onClick={() => handleUnblockUser(u.id)} disabled={loading} className="btn-unblock">Unblock</button>
                     ) : (
                       <button onClick={() => handleBlockUser(u.id)} disabled={loading} className="btn-block">Block</button>
                     )}
@@ -190,17 +190,23 @@ export const AdminDashboard = () => {
           <h3>Property Management ({properties.length} properties)</h3>
           <div className="properties-grid">
             {properties.map(p => (
-              <div key={p.id} className="property-card-admin">
+              <div key={p.id} className="property-card-admin" style={{ position: 'relative' }}>
+                <div className={`badge-overlay ${p.sold ? 'sold' : 'available'}`}>
+                  {p.sold ? 'Sold' : 'Available'}
+                </div>
                 {p.imageUrl && (
                   <img src={p.imageUrl} alt={p.title} className="property-image" />
                 )}
-                <div className="property-info">
-                  <h4>{p.title}</h4>
-                  <p className="price">₹{p.price.toLocaleString()}</p>
-                  <p className="location">📍 {p.location}</p>
-                  <p className="seller">Seller: {p.seller?.username}</p>
-                  <p className="status">{p.sold ? '❌ Sold' : '✓ Available'}</p>
-                  <button onClick={() => handleDeleteProperty(p.id)} disabled={loading} className="btn-delete">🗑️ Delete</button>
+                <div className="property-info" style={{ padding: '20px' }}>
+                  <h4 style={{ margin: '0' }}>{p.title}</h4>
+                  <p className="price" style={{ padding: '4px 0 12px' }}>₹{p.price.toLocaleString()}</p>
+                  <p className="location" style={{ padding: '0', marginBottom: '4px' }}>📍 {p.location}</p>
+                  <p className="seller" style={{ padding: '0', color: 'var(--text-muted)' }}>Seller: {p.seller?.username}</p>
+                </div>
+                <div className="card-footer">
+                  <button onClick={() => handleDeleteProperty(p.id)} disabled={loading} className="btn-delete">
+                    🗑️ Delete Property
+                  </button>
                 </div>
               </div>
             ))}

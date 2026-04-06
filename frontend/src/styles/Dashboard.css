@@ -367,6 +367,68 @@
   background: hsla(344, 90%, 60%, 0.1);
   color: hsl(344, 90%, 72%);
   border: 1px solid hsla(344, 90%, 60%, 0.18) !important;
+  transition: all 0.2s var(--ease-out);
+}
+
+.btn-delete:hover {
+  background: var(--accent) !important;
+  color: white !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 4px 15px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+.btn-block {
+  background: hsla(38, 92%, 60%, 0.1);
+  color: var(--warning);
+  border: 1px solid hsla(38, 92%, 60%, 0.2) !important;
+  transition: all 0.2s var(--ease-out);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-block:hover {
+  background: var(--warning) !important;
+  color: white !important;
+  border-color: var(--warning) !important;
+  box-shadow: 0 4px 12px var(--warning-glow);
+  transform: translateY(-2px);
+}
+
+.btn-unblock {
+  background: hsla(158, 64%, 50%, 0.1);
+  color: var(--success);
+  border: 1px solid hsla(158, 64%, 50%, 0.2) !important;
+  transition: all 0.2s var(--ease-out);
+  padding: 8px 16px;
+  border-radius: var(--radius);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-unblock:hover {
+  background: var(--success) !important;
+  color: white !important;
+  border-color: var(--success) !important;
+  box-shadow: 0 4px 12px hsla(158, 64%, 50%, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-edit {
+  background: hsla(265, 89%, 66%, 0.1);
+  color: var(--primary-light);
+  border: 1px solid hsla(265, 89%, 66%, 0.18) !important;
+  transition: all 0.2s var(--ease-out);
+}
+
+.btn-edit:hover {
+  background: var(--primary) !important;
+  color: white !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 4px 15px var(--primary-glow);
+  transform: translateY(-2px);
 }
 
 /* ----- Status Pill ----- */
@@ -383,15 +445,85 @@
 }
 
 .status-available {
-  background: hsla(158, 64%, 50%, 0.12);
+  background: hsla(158, 64%, 50%, 0.1);
   color: var(--success);
-  border: 1px solid hsla(158, 64%, 50%, 0.25);
+  border: 1px solid hsla(158, 64%, 50%, 0.2);
+  box-shadow: 0 0 10px hsla(158, 64%, 50%, 0.1);
 }
 
 .status-sold {
-  background: hsla(344, 90%, 60%, 0.1);
-  color: hsl(344, 90%, 70%);
-  border: 1px solid hsla(344, 90%, 60%, 0.22);
+  background: hsla(0, 0%, 100%, 0.05);
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  opacity: 0.8;
+}
+
+/* Badge Overlay for Images */
+.badge-overlay {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 5;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.badge-overlay.available {
+  background: hsla(158, 64%, 50%, 0.25);
+  color: #fff;
+  border-color: hsla(158, 64%, 50%, 0.4);
+}
+
+.badge-overlay.sold {
+  background: hsla(0, 0%, 0%, 0.6);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Balanced Card Footer */
+.card-footer {
+  padding: 20px;
+  display: flex;
+  gap: 10px;
+  margin-top: auto;
+  border-top: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.card-footer button {
+  flex: 1;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 10px !important;
+  font-size: 0.82rem !important;
+  white-space: nowrap;
+}
+
+.property-card-admin {
+  background: var(--surface-2);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s var(--ease-out);
+  animation: slideUpFade 0.4s var(--ease-out) both;
+}
+
+.property-card-admin:hover {
+  border-color: var(--primary-glow);
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
 }
 
 /* =============================================

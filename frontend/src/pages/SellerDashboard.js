@@ -281,13 +281,23 @@ export const SellerDashboard = () => {
 
           <div className="properties-grid" style={{ marginTop: '24px' }}>
             {properties.map(prop => (
-              <div key={prop.id} className="property-card">
+              <div key={prop.id} className="property-card" style={{ position: 'relative' }}>
+                <div className={`badge-overlay ${prop.sold ? 'sold' : 'available'}`}>
+                  {prop.sold ? 'Sold' : 'Available'}
+                </div>
                 <img src={prop.imageUrl} alt="" className="property-image" />
-                <h4>{prop.title}</h4>
-                <p>₹ {prop.price.toLocaleString()} — {prop.location}</p>
-                <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                  <button onClick={() => handleEditProperty(prop)} style={{ flex: 1 }}>Edit</button>
-                  <button onClick={() => handleDeleteProperty(prop.id)} style={{ flex: 1, color: '#ff6b6b' }}>Delete</button>
+                <div className="property-info" style={{ padding: '20px 20px 0' }}>
+                  <h4 style={{ padding: '0' }}>{prop.title}</h4>
+                  <p className="price" style={{ padding: '4px 0' }}>₹ {prop.price.toLocaleString()}</p>
+                  <p style={{ padding: '0', fontSize: '0.9rem', color: 'var(--text-sub)' }}>📍 {prop.location}</p>
+                </div>
+                <div className="card-footer">
+                  <button onClick={() => handleEditProperty(prop)} className="btn-edit">
+                    ✏️ Edit
+                  </button>
+                  <button onClick={() => handleDeleteProperty(prop.id)} className="btn-delete">
+                    🗑️ Delete
+                  </button>
                 </div>
               </div>
             ))}
