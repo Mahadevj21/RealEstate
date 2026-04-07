@@ -1,6 +1,7 @@
 package com.realestate.realestate.controller;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -13,9 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.realestate.realestate.entity.Deal;
 import com.realestate.realestate.entity.Property;
 import com.realestate.realestate.entity.User;
-import com.realestate.realestate.repository.PropertyRepository;
-import com.realestate.realestate.repository.UserRepository;
 import com.realestate.realestate.service.DealService;
+import com.realestate.realestate.service.PropertyService;
+import com.realestate.realestate.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,13 +26,12 @@ import lombok.RequiredArgsConstructor;
 public class SellerController {
 
     private final DealService dealService;
-    private final UserRepository userRepository;
-    private final PropertyRepository propertyRepository;
+    private final UserService userService;
+    private final PropertyService propertyService;
 
     @GetMapping("/{sellerId}/pending-deals")
     public List<Deal> getPendingDeals(@PathVariable Long sellerId) {
-        userRepository.findById(sellerId)
-                .orElseThrow(() -> new RuntimeException("Seller not found"));
+        userService.findById(sellerId);
         return dealService.getSellerPendingDeals(sellerId);
     }
 
@@ -47,32 +47,50 @@ public class SellerController {
 
     @GetMapping("/{sellerId}/balance")
     public Map<String, Object> getSellerBalance(@PathVariable Long sellerId) {
-        User seller = userRepository.findById(sellerId)
-                .orElseThrow(() -> new RuntimeException("Seller not found"));
-        return Map.of(
-            "id", seller.getId(),
-            "username", seller.getUsername(),
-            "balance", seller.getBalance()
-        );
+        User seller = userService.findById(sellerId);
+        Map<String, Object> balanceInfo = new HashMap<>();
+        balanceInfo.put("id", seller.getId());
+        balanceInfo.put("username", seller.getUsername());
+        balanceInfo.put("balance", seller.getBalance());
+        return balanceInfo;
     }
 
     @GetMapping("/{sellerId}/properties")
     public List<Property> getSellerProperties(@PathVariable Long sellerId) {
-        userRepository.findById(sellerId)
-                .orElseThrow(() -> new RuntimeException("Seller not found"));
-        return propertyRepository.findBySellerId(sellerId);
+        userService.findById(sellerId);
+        return propertyService.getAllProperties().stream()
+                .filter(p -> p.getSeller() != null && p.getSeller().getId().equals(sellerId))
+                .toList();
+    }
+
+    @GetMapping("/{sellerId}/all-deals")
+    public List<Deal> getAllSellerDeals(@PathVariable Long sellerId) {
+        userService.findById(sellerId);
+        return dealService.getAllSellerDeals(sellerId);
     }
 
     @GetMapping("/{sellerId}/analytics/performance")
     public List<Map<String, Object>> getSellerPerformance(@PathVariable Long sellerId) {
-        List<Property> props = propertyRepository.findBySellerId(sellerId);
+        List<Property> props = propertyService.getAllProperties().stream()
+                .filter(p -> p.getSeller() != null && p.getSeller().getId().equals(sellerId))
+                .toList();
 
         long active = props.stream().filter(p -> !p.isSold()).count();
         long sold = props.stream().filter(Property::isSold).count();
 
         List<Map<String, Object>> result = new ArrayList<>();
-        result.add(Map.of("name", "Active", "value", (double) active, "fill", "#82ca9d"));
-        result.add(Map.of("name", "Sold", "value", (double) sold, "fill", "#8884d8"));
+        
+        Map<String, Object> activeData = new HashMap<>();
+        activeData.put("name", "Active");
+        activeData.put("value", (double) active);
+        activeData.put("fill", "#82ca9d");
+        result.add(activeData);
+
+        Map<String, Object> soldData = new HashMap<>();
+        soldData.put("name", "Sold");
+        soldData.put("value", (double) sold);
+        soldData.put("fill", "#8884d8");
+        result.add(soldData);
 
         return result;
     }

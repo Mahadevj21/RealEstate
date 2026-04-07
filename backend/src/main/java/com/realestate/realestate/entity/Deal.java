@@ -2,6 +2,7 @@ package com.realestate.realestate.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -23,14 +24,17 @@ public class Deal {
 
     @ManyToOne
     @JoinColumn(name = "property_id")
+    @JsonIgnoreProperties({"seller", "owner"})
     private Property property;
 
     @ManyToOne
     @JoinColumn(name = "buyer_id")
+    @JsonIgnoreProperties({"password"})
     private User buyer;
 
     @ManyToOne
     @JoinColumn(name = "seller_id")
+    @JsonIgnoreProperties({"password"})
     private User seller;
 
     @Enumerated(EnumType.STRING)

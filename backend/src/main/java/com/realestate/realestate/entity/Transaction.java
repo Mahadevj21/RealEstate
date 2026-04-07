@@ -2,6 +2,7 @@ package com.realestate.realestate.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,6 +22,7 @@ public class Transaction {
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnoreProperties({"password"})
     private User user;
 
     @Column(nullable = false)
@@ -31,6 +33,9 @@ public class Transaction {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(nullable = false)
+    private String status = "SUCCESS"; // SUCCESS, FAILED, PENDING
 
     @Column(nullable = false)
     private LocalDateTime timestamp = LocalDateTime.now();
@@ -49,6 +54,9 @@ public class Transaction {
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
 
     public LocalDateTime getTimestamp() { return timestamp; }
     public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }

@@ -18,6 +18,7 @@ export const SellerDashboard = () => {
   const [activeTab, setActiveTab] = useState('properties');
   const [transactions, setTransactions] = useState([]);
   const [analyticsData, setAnalyticsData] = useState([]);
+  const [allDeals, setAllDeals] = useState([]);
   const formRef = useRef(null);
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export const SellerDashboard = () => {
     loadBalance();
     loadPendingDeals();
     loadAnalytics();
+    loadAllDeals();
   }, []);
 
   const loadAnalytics = async () => {
@@ -64,6 +66,16 @@ export const SellerDashboard = () => {
       setPendingDeals(Array.isArray(deals) ? deals : []);
     } catch (err) {
       console.error('Pending deals fetch error', err);
+    }
+  };
+
+  const loadAllDeals = async () => {
+    if (!user) return;
+    try {
+      const deals = await apiService.getAllSellerDeals(user.id);
+      setAllDeals(Array.isArray(deals) ? deals : []);
+    } catch (err) {
+      console.error('All deals fetch error', err);
     }
   };
 
@@ -237,7 +249,8 @@ export const SellerDashboard = () => {
 
       <div className="admin-tabs">
         <button className={`tab-btn ${activeTab === 'properties' ? 'active' : ''}`} onClick={() => setActiveTab('properties')}>🏠 My Properties</button>
-        <button className={`tab-btn ${activeTab === 'deals' ? 'active' : ''}`} onClick={() => setActiveTab('deals')}>💼 Requests {pendingDeals.length > 0 && '🔔'}</button>
+        <button className={`tab-btn ${activeTab === 'deals' ? 'active' : ''}`} onClick={() => setActiveTab('deals')}>⏳ Requests {pendingDeals.length > 0 && '🔔'}</button>
+        <button className={`tab-btn ${activeTab === 'sales' ? 'active' : ''}`} onClick={() => { setActiveTab('sales'); loadAllDeals(); }}>📋 Sales History</button>
         <button className={`tab-btn ${activeTab === 'wallet' ? 'active' : ''}`} onClick={() => { setActiveTab('wallet'); loadTransactions(); }}>💳 Wallet</button>
         <button className={`tab-btn ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>📈 Analytics</button>
       </div>
@@ -282,8 +295,19 @@ export const SellerDashboard = () => {
           <div className="properties-grid" style={{ marginTop: '24px' }}>
             {properties.map(prop => (
               <div key={prop.id} className="property-card" style={{ position: 'relative' }}>
+                {/* Sold / Available badge */}
                 <div className={`badge-overlay ${prop.sold ? 'sold' : 'available'}`}>
                   {prop.sold ? 'Sold' : 'Available'}
+                </div>
+                {/* Approval status badge */}
+                <div style={{
+                  position: 'absolute', top: '10px', left: '10px', zIndex: 6,
+                  padding: '4px 12px', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 800,
+                  background: prop.approved ? 'rgba(46, 125, 50, 0.95)' : 'rgba(230, 81, 0, 0.95)',
+                  color: 'white', border: '1px solid rgba(255,255,255,0.2)',
+                  backdropFilter: 'blur(4px)'
+                }}>
+                  {prop.approved ? '✅ Approved' : '⏳ Pending'}
                 </div>
                 <img src={prop.imageUrl} alt="" className="property-image" />
                 <div className="property-info" style={{ padding: '20px 20px 0' }}>
@@ -292,12 +316,8 @@ export const SellerDashboard = () => {
                   <p style={{ padding: '0', fontSize: '0.9rem', color: 'var(--text-sub)' }}>📍 {prop.location}</p>
                 </div>
                 <div className="card-footer">
-                  <button onClick={() => handleEditProperty(prop)} className="btn-edit">
-                    ✏️ Edit
-                  </button>
-                  <button onClick={() => handleDeleteProperty(prop.id)} className="btn-delete">
-                    🗑️ Delete
-                  </button>
+                  <button onClick={() => handleEditProperty(prop)} className="btn-edit">✏️ Edit</button>
+                  <button onClick={() => handleDeleteProperty(prop.id)} className="btn-delete">🗑️ Delete</button>
                 </div>
               </div>
             ))}
@@ -324,6 +344,47 @@ export const SellerDashboard = () => {
         </div>
       )}
 
+      {activeTab === 'sales' && (
+        <div className="deals-area">
+          <h3 style={{ marginBottom: '16px' }}>Sales History ({allDeals.length} deals)</h3>
+          {allDeals.length === 0 ? <p>No deals yet.</p> : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Deal ID</th><th>Property</th><th>Buyer</th><th>Amount</th><th>Status</th><th>Date</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allDeals.map(deal => (
+                    <tr key={deal.id}>
+                      <td>{deal.id}</td>
+                      <td>{deal.property?.title}</td>
+                      <td>{deal.buyer?.username}</td>
+                      <td style={{ fontWeight: 'bold' }}>₹{deal.amount?.toLocaleString()}</td>
+                      <td>
+                        <span style={{
+                          padding: '3px 10px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600,
+                          background:
+                            deal.status === 'COMPLETED' ? '#e8f5e9' :
+                            deal.status === 'PENDING' ? '#fff3e0' : '#fce4ec',
+                          color:
+                            deal.status === 'COMPLETED' ? '#2e7d32' :
+                            deal.status === 'PENDING' ? '#e65100' : '#880e4f'
+                        }}>
+                          {deal.status}
+                        </span>
+                      </td>
+                      <td>{deal.completedAt ? new Date(deal.completedAt).toLocaleDateString() : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
       {activeTab === 'wallet' && (
          <div className="wallet-area">
             <div className="wallet-header" style={{ textAlign: 'center', padding: '24px', background: 'var(--surface-2)', borderRadius: '12px', marginBottom: '24px' }}>
@@ -347,17 +408,51 @@ export const SellerDashboard = () => {
 
       {activeTab === 'analytics' && (
         <div className="analytics-area">
-          <div style={{ height: '350px', background: 'var(--surface-2)', borderRadius: '12px', padding: '20px' }}>
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={analyticsData} cx="50%" cy="50%" outerRadius={100} label={({name}) => name} dataKey="value">
-                  {analyticsData.map((e, i) => <Cell key={i} fill={e.fill || '#8884d8'} />)}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+          <h3 style={{ marginBottom: '20px' }}>My Performance Overview</h3>
+
+          {/* Summary stat cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '14px', marginBottom: '24px' }}>
+            {[
+              { label: 'Total Listings', value: properties.length, color: '#8884d8', icon: '🏘️' },
+              { label: 'Active', value: analyticsData.find(d => d.name === 'Active')?.value ?? 0, color: '#82ca9d', icon: '✅' },
+              { label: 'Sold', value: analyticsData.find(d => d.name === 'Sold')?.value ?? 0, color: '#ffa726', icon: '🏷️' },
+              { label: 'Total Revenue', value: `₹${allDeals.filter(d => d.status === 'COMPLETED').reduce((sum, d) => sum + (d.amount || 0), 0).toLocaleString()}`, color: '#4caf50', icon: '💰' },
+            ].map(s => (
+              <div key={s.label} style={{ background: 'var(--surface-2)', padding: '16px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>{s.icon}</div>
+                <p style={{ margin: '0 0 4px', color: 'var(--text-muted)', fontSize: '0.78rem', fontWeight: 600 }}>{s.label.toUpperCase()}</p>
+                <p style={{ margin: 0, fontSize: '1.4rem', fontWeight: 'bold', color: s.color }}>{s.value}</p>
+              </div>
+            ))}
           </div>
+
+          {/* Pie chart — show empty state if no data or all zeros */}
+          {analyticsData.length === 0 || analyticsData.every(d => d.value === 0) ? (
+            <div style={{ textAlign: 'center', padding: '60px', background: 'var(--surface-2)', borderRadius: '12px', border: '1px solid var(--border)', color: 'var(--text-muted)' }}>
+              <p style={{ fontSize: '2.5rem', marginBottom: '12px' }}>📊</p>
+              <p style={{ fontWeight: 600, marginBottom: '6px' }}>No Sales Data Yet</p>
+              <p style={{ fontSize: '0.9rem' }}>Once your properties are sold, your performance chart will appear here.</p>
+            </div>
+          ) : (
+            <div style={{ height: '340px', background: 'var(--surface-2)', borderRadius: '12px', padding: '20px', border: '1px solid var(--border)' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={analyticsData}
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={110}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    dataKey="value"
+                  >
+                    {analyticsData.map((e, i) => <Cell key={i} fill={e.fill || '#8884d8'} />)}
+                  </Pie>
+                  <Tooltip formatter={(value, name) => [value, name]} />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </div>
       )}
     </div>

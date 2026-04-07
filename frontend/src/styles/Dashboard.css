@@ -173,6 +173,7 @@
    ============================================= */
 .admin-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 4px;
   background: var(--surface-2);
   padding: 5px;
@@ -204,6 +205,23 @@
 .tab-btn:hover:not(.active) {
   color: var(--text-main);
   background: rgba(255, 255, 255, 0.05);
+}
+
+/* Pending notification badge on tab buttons */
+.pending-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: hsl(38, 92%, 55%);
+  color: #1a1a2e;
+  font-size: 0.65rem;
+  font-weight: 800;
+  border-radius: 999px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 /* =============================================

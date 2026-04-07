@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 
 import com.realestate.realestate.entity.Deal;
 import com.realestate.realestate.entity.Property;
-import com.realestate.realestate.entity.Transaction;
 import com.realestate.realestate.entity.User;
 import com.realestate.realestate.repository.DealRepository;
 import com.realestate.realestate.repository.PropertyRepository;
@@ -23,6 +22,7 @@ public class DealService {
     private final UserRepository userRepository;
     private final DealRepository dealRepository;
     private final TransactionService transactionService;
+    private final EmailService emailService;
 
     public Deal createDealRequest(Long propertyId, Long buyerId) {
         Property property = propertyRepository.findById(propertyId)
@@ -99,12 +99,11 @@ public class DealService {
         double brokerageFee = 100.0;
 
         if (buyer.getBalance() < propertyPrice + brokerageFee) {
-            throw new RuntimeException("Insufficient balance for buyer.");
+            throw new RuntimeException("Buyer has insufficient balance (Needs ₹" + (propertyPrice + brokerageFee) + ")");
         }
 
-        if (seller.getBalance() < brokerageFee) {
-            throw new RuntimeException("Insufficient balance for seller.");
-        }
+        // We don't check seller balance upfront because fee is deducted from the sale proceeds
+        // seller.getBalance() will be updated to balancer + price - fee
 
         // Handle balance transfers
         buyer.setBalance(buyer.getBalance() - propertyPrice - brokerageFee);
@@ -121,28 +120,42 @@ public class DealService {
         propertyRepository.save(property);
         dealRepository.save(deal);
 
-        saveTransaction(buyer, propertyPrice, "DEBIT", "Paid for property ID: " + property.getId());
-        saveTransaction(seller, propertyPrice, "CREDIT", "Received payment for property ID: " + property.getId());
-        saveTransaction(buyer, brokerageFee, "DEBIT", "Paid brokerage fee for property ID: " + property.getId());
-        saveTransaction(seller, brokerageFee, "DEBIT", "Paid brokerage fee for property ID: " + property.getId());
-        saveTransaction(admin, brokerageFee * 2, "CREDIT", "Received brokerage for property ID: " + property.getId());
+        // Use TransactionService.createTransaction() — proper service layer call
+        transactionService.createTransaction(buyer, propertyPrice, "DEBIT",
+                "Paid for property ID: " + property.getId());
+        transactionService.createTransaction(seller, propertyPrice, "CREDIT",
+                "Received payment for property ID: " + property.getId());
+        transactionService.createTransaction(buyer, brokerageFee, "DEBIT",
+                "Paid brokerage fee for property ID: " + property.getId());
+        transactionService.createTransaction(seller, brokerageFee, "DEBIT",
+                "Paid brokerage fee for property ID: " + property.getId());
+        transactionService.createTransaction(admin, brokerageFee * 2, "CREDIT",
+                "Received brokerage for property ID: " + property.getId());
+
+        // Send Confirmation Emails
+        emailService.sendEmail(buyer.getEmail(), "Property Booking Confirmed!",
+            "Congratulations " + buyer.getUsername() + "!\n\nYour booking for '" + property.getTitle() +
+            "' at " + property.getLocation() + " is confirmed.\n\nTotal Paid: " + propertyPrice +
+            "\n\nHappy Living!\nPropmanage Team");
+
+        emailService.sendEmail(seller.getEmail(), "Property Sold!",
+            "Hello " + seller.getUsername() + ",\n\nYour property '" + property.getTitle() +
+            "' has been successfully sold to " + buyer.getUsername() +
+            ".\n\nAmount Received: " + propertyPrice +
+            "\n\nThank you for listing with us!\nPropmanage Team");
 
         return "Deal finalized successfully";
-    }
-
-    private void saveTransaction(User user, double amount, String type, String desc) {
-        Transaction t = new Transaction();
-        t.setUser(user);
-        t.setAmount(amount);
-        t.setType(type);
-        t.setDescription(desc);
-        transactionService.save(t);
     }
 
     public List<Deal> getSellerPendingDeals(Long sellerId) {
         return dealRepository.findBySellerId(sellerId).stream()
                 .filter(d -> d.getStatus().equals(Deal.DealStatus.PENDING))
                 .toList();
+    }
+
+    // viewSales() — all deals for a seller (pending, completed, rejected)
+    public List<Deal> getAllSellerDeals(Long sellerId) {
+        return dealRepository.findBySellerId(sellerId);
     }
 
     public List<Deal> getBuyerDeals(Long buyerId) {

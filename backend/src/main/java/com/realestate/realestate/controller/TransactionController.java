@@ -5,7 +5,9 @@ import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.realestate.realestate.entity.Transaction;
@@ -27,7 +29,7 @@ public class TransactionController {
     public Map<String, Object> getWalletBalance(@PathVariable Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        
+
         return Map.of(
             "userId", user.getId(),
             "username", user.getUsername(),
@@ -45,5 +47,13 @@ public class TransactionController {
     @GetMapping("/transaction/{transactionId}")
     public Transaction getTransaction(@PathVariable Long transactionId) {
         return transactionService.getTransactionById(transactionId);
+    }
+
+    // updateStatus() — allows updating a transaction's status (SUCCESS / FAILED / PENDING)
+    @PutMapping("/transaction/{transactionId}/status")
+    public Transaction updateTransactionStatus(
+            @PathVariable Long transactionId,
+            @RequestParam String status) {
+        return transactionService.updateStatus(transactionId, status);
     }
 }

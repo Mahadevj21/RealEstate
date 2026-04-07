@@ -8,53 +8,31 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.realestate.realestate.entity.User;
-import com.realestate.realestate.repository.UserRepository;
+import com.realestate.realestate.service.AuthService;
+import com.realestate.realestate.service.UserService;
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
-    private final UserRepository userRepository;
-
-    public AuthController(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    private final AuthService authService;
+    private final UserService userService;
 
     @PostMapping("/register")
     public User register(@RequestBody User user) {
-        if (user.getBalance() == 0) {
-            user.setBalance(0);
-        }
-        if (user.getRole() == null) {
-            user.setRole(User.Role.BUYER);
-        }
-        user.setBlocked(false);
-        return userRepository.save(user);
+        return authService.register(user);
     }
 
     @PostMapping("/login")
     public User login(@RequestBody User loginRequest) {
-        return userRepository.findByEmail(loginRequest.getEmail())
-                .filter(user -> user.getPassword().equals(loginRequest.getPassword()))
-                .filter(user -> !user.isBlocked())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials or account is blocked"));
+        return authService.login(loginRequest.getEmail(), loginRequest.getPassword());
     }
 
     @PutMapping("/profile/{userId}")
     public User updateProfile(@PathVariable Long userId, @RequestBody User updateData) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        if (updateData.getUsername() != null && !updateData.getUsername().isEmpty()) {
-            user.setUsername(updateData.getUsername());
-        }
-        if (updateData.getEmail() != null && !updateData.getEmail().isEmpty()) {
-            user.setEmail(updateData.getEmail());
-        }
-        if (updateData.getPassword() != null && !updateData.getPassword().isEmpty()) {
-            user.setPassword(updateData.getPassword());
-        }
-
-        return userRepository.save(user);
+        return userService.updateProfile(userId, updateData);
     }
 }

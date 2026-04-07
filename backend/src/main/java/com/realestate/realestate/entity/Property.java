@@ -1,5 +1,6 @@
 package com.realestate.realestate.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -41,14 +42,19 @@ public class Property {
 
     @ManyToOne
     @JoinColumn(name = "owner_id")
+    @JsonIgnoreProperties({"password"})
     private User owner;
 
     @ManyToOne
     @JoinColumn(name = "seller_id")
+    @JsonIgnoreProperties({"password"})
     private User seller;
 
     @Column(nullable = false)
     private boolean sold = false;
+
+    @Column(nullable = false)
+    private boolean approved = false;
 
     // Getters and setters
     public Long getId() { return id; }
@@ -77,6 +83,9 @@ public class Property {
 
     public boolean isSold() { return sold; }
     public void setSold(boolean sold) { this.sold = sold; }
+
+    public boolean isApproved() { return approved; }
+    public void setApproved(boolean approved) { this.approved = approved; }
 
     public Integer getBedrooms() { return bedrooms; }
     public void setBedrooms(Integer bedrooms) { this.bedrooms = bedrooms; }

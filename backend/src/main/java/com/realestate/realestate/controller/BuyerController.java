@@ -18,9 +18,9 @@ import com.realestate.realestate.entity.Property;
 import com.realestate.realestate.entity.User;
 import com.realestate.realestate.repository.DealRepository;
 import com.realestate.realestate.repository.FavouriteRepository;
-import com.realestate.realestate.repository.PropertyRepository;
 import com.realestate.realestate.repository.UserRepository;
 import com.realestate.realestate.service.DealService;
+import com.realestate.realestate.service.PropertyService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -30,8 +30,8 @@ import lombok.RequiredArgsConstructor;
 public class BuyerController {
 
     private final DealService dealService;
+    private final PropertyService propertyService;
     private final UserRepository userRepository;
-    private final PropertyRepository propertyRepository;
     private final FavouriteRepository favouriteRepository;
     private final DealRepository dealRepository;
 
@@ -65,8 +65,7 @@ public class BuyerController {
         User buyer = userRepository.findById(buyerId)
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
 
-        Property property = propertyRepository.findById(propertyId)
-                .orElseThrow(() -> new RuntimeException("Property not found"));
+        Property property = propertyService.getPropertyById(propertyId);
 
         if (favouriteRepository.findByUserIdAndPropertyId(buyerId, propertyId).isPresent()) {
             throw new RuntimeException("Property already in favourites");
@@ -102,19 +101,20 @@ public class BuyerController {
                 .collect(Collectors.toList());
     }
 
+    // filterProperty() — delegates to PropertyService (approved only)
     @GetMapping("/filter/location")
     public List<Property> filterByLocation(@RequestParam String location) {
-        return propertyRepository.findByLocation(location);
+        return propertyService.filterProperties(location, 0, Double.MAX_VALUE, false);
     }
 
     @GetMapping("/filter/price")
     public List<Property> filterByPrice(@RequestParam double minPrice, @RequestParam double maxPrice) {
-        return propertyRepository.findByPriceBetween(minPrice, maxPrice);
+        return propertyService.filterProperties("", minPrice, maxPrice, false);
     }
 
     @GetMapping("/filter/sold")
     public List<Property> filterBySoldStatus(@RequestParam boolean sold) {
-        return propertyRepository.findBySold(sold);
+        return propertyService.filterProperties("", 0, Double.MAX_VALUE, sold);
     }
 
     @GetMapping("/filter/advanced")
@@ -124,14 +124,18 @@ public class BuyerController {
             @RequestParam(required = false, defaultValue = "999999999") double maxPrice,
             @RequestParam(required = false, defaultValue = "false") boolean sold
     ) {
-        if (location.isEmpty()) {
-            return propertyRepository.findByPriceBetweenAndSold(minPrice, maxPrice, sold);
-        }
-        return propertyRepository.filterProperties(location, minPrice, maxPrice, sold);
+        return propertyService.filterProperties(location, minPrice, maxPrice, sold);
     }
 
+    // searchProperty() — keyword search via PropertyService
+    @GetMapping("/search")
+    public List<Property> searchProperties(@RequestParam String keyword) {
+        return propertyService.searchProperties(keyword);
+    }
+
+    // Available = approved + not sold
     @GetMapping("/available")
     public List<Property> getAvailableProperties() {
-        return propertyRepository.findBySold(false);
+        return propertyService.getApprovedProperties();
     }
 }

@@ -2,6 +2,7 @@ package com.realestate.realestate.entity;
 
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -24,10 +25,12 @@ public class Favourite {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
+    @JsonIgnoreProperties({"password"})
     private User user;
 
     @ManyToOne
     @JoinColumn(name = "property_id", nullable = false)
+    @JsonIgnoreProperties({"seller", "owner"})
     private Property property;
 
     @Column(name = "created_at")

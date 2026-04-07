@@ -58,12 +58,24 @@ export const BuyerDashboard = () => {
   const [activeTab, setActiveTab] = useState('properties');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [viewMode, setViewMode] = useState('grid');
+  const [deals, setDeals] = useState([]);
 
   useEffect(() => {
     loadProperties();
     loadFavorites();
     loadBalance();
+    loadDeals();
   }, []);
+
+  const loadDeals = async () => {
+    if (!user) return;
+    try {
+      const data = await apiService.getBuyerDeals(user.id);
+      setDeals(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Failed to load deals:', err);
+    }
+  };
 
   const loadFavorites = async () => {
     if (!user) return;
@@ -114,11 +126,13 @@ export const BuyerDashboard = () => {
     try {
       setLoading(true);
       await apiService.buyProperty(buyingProperty.id, user.id);
-      setMessage('✓ Request sent! Waiting for approval.');
+      setMessage('✓ Request sent! Waiting for seller confirmation.');
       setShowBuyDialog(false);
       setBuyingProperty(null);
+      await loadProperties(); // Refresh to show it might be pending
+      await loadBalance(); // Refresh balance
+      await loadDeals(); // Refresh deal states
       setTimeout(() => setMessage(''), 5000);
-      loadProperties();
     } catch (err) {
       setMessage('✗ ' + (err.message || 'Action failed'));
     } finally {
@@ -294,7 +308,21 @@ export const BuyerDashboard = () => {
                     <div className="specs row">🛏️ {prop.bedrooms || 0} Beds • 🛁 {prop.bathrooms || 0} Baths</div>
                     <div className="card-footer-btns" style={{ marginTop: '12px', display: 'flex', gap: '8px' }}>
                       {!prop.sold && (
-                        <button onClick={(e) => { e.stopPropagation(); handleBuyClick(prop); }} disabled={balance < (prop.price + 100)} className="buy-btn-small" style={{ flex: 1, padding: '8px', background: '#ff6767', color: 'white', border: 'none', borderRadius: '4px' }}>Buy</button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleBuyClick(prop); }} 
+                          disabled={Number(balance) < (Number(prop.price) + 100) || deals.some(d => d.property?.id === prop.id)} 
+                          className="buy-btn-small" 
+                          style={{ 
+                            flex: 1, padding: '8px', 
+                            background: deals.some(d => d.property?.id === prop.id) ? '#ffcc00' :
+                                      Number(balance) < (Number(prop.price) + 100) ? 'var(--surface-3)' : 'var(--success)',
+                            color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer',
+                            opacity: (Number(balance) < (Number(prop.price) + 100) || deals.some(d => d.property?.id === prop.id)) ? 0.7 : 1
+                          }}
+                        >
+                          {deals.some(d => d.property?.id === prop.id) ? '⏳ Request Sent' :
+                           Number(balance) < (Number(prop.price) + 100) ? 'Insufficient Funds' : 'Buy Now'}
+                        </button>
                       )}
                       <button onClick={(e) => { e.stopPropagation(); favorites.includes(prop.id) ? handleRemoveFavorite(prop.id) : handleAddFavorite(prop.id); }} className="fav-btn-toggle" style={{ padding: '8px' }}>{favorites.includes(prop.id) ? '❤️' : '🤍'}</button>
                     </div>
@@ -326,6 +354,18 @@ export const BuyerDashboard = () => {
           <div className="wallet-header-card" style={{ background: 'var(--surface-2)', padding: '24px', borderRadius: '12px', textAlign: 'center', marginBottom: '24px' }}>
             <h3 style={{ margin: 0, color: 'var(--text-muted)' }}>Wallet Balance</h3>
             <p style={{ fontSize: '2.5rem', fontWeight: 'bold', margin: '8px 0' }}>₹{balance.toLocaleString()}</p>
+            <button onClick={async () => {
+              try {
+                setLoading(true);
+                // Simulate a recharge call - in a real app this would be a payment gateway
+                // For this demo, let's just use the admin recharge all or a specific user recharge if available
+                // But since we don't have a specific recharge endpoint for buyers yet, let's just show a tip
+                setMessage('💡 Tip: Ask Admin to recharge all users from Admin Dashboard!');
+                setTimeout(() => setMessage(''), 5000);
+              } finally { setLoading(false); }
+            }} style={{ padding: '8px 16px', background: 'var(--grad-aurora)', color: 'white', border: 'none', borderRadius: '20px', cursor: 'pointer', fontWeight: 600 }}>
+              + Add Funds
+            </button>
           </div>
           <table className="admin-table">
             <thead>
@@ -346,12 +386,12 @@ export const BuyerDashboard = () => {
       )}
 
       {selectedProperty && (
-        <div className="fullscreen-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--bg-main)', zIndex: 1000, overflowY: 'auto', padding: '24px' }}>
-          <button onClick={() => setSelectedProperty(null)} style={{ marginBottom: '20px', padding: '10px 20px', cursor: 'pointer' }}>← Back to Dashboard</button>
+        <div className="fullscreen-overlay" style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'var(--background)', zIndex: 1000, overflowY: 'auto', padding: '40px' }}>
+          <button onClick={() => setSelectedProperty(null)} style={{ marginBottom: '20px', padding: '10px 20px', cursor: 'pointer', border: '1px solid var(--border)', borderRadius: '6px', background: 'var(--surface-3)', color: 'var(--text-main)' }}>← Back to Dashboard</button>
           <div className="detail-container" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 1fr', gap: '32px' }}>
-            <img src={selectedProperty.imageUrl} alt={selectedProperty.title} style={{ width: '100%', borderRadius: '12px' }} />
+            <img src={selectedProperty.imageUrl} alt={selectedProperty.title} style={{ width: '100%', borderRadius: '12px', boxShadow: 'var(--shadow-lg)' }} />
             <div className="detail-info">
-              <h1>{selectedProperty.title}</h1>
+              <h1 style={{ fontFamily: 'Space Grotesk' }}>{selectedProperty.title}</h1>
               <p style={{ fontSize: '1.5rem', color: 'var(--primary)', fontWeight: 'bold' }}>₹ {selectedProperty.price.toLocaleString()}</p>
               <p>📍 {selectedProperty.location}</p>
               <p>🛏️ {selectedProperty.bedrooms} Beds | 🛁 {selectedProperty.bathrooms} Baths</p>
@@ -360,7 +400,21 @@ export const BuyerDashboard = () => {
                 <p>{selectedProperty.description}</p>
               </div>
               {!selectedProperty.sold && (
-                <button onClick={() => handleBuyClick(selectedProperty)} className="buy-prime-btn" style={{ padding: '16px 32px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1.1rem' }}>Buy Now</button>
+                <button 
+                  onClick={() => handleBuyClick(selectedProperty)} 
+                  disabled={Number(balance) < (Number(selectedProperty.price) + 100) || deals.some(d => d.property?.id === selectedProperty.id)} 
+                  className="buy-prime-btn" 
+                  style={{ 
+                    padding: '16px 32px', 
+                    background: deals.some(d => d.property?.id === selectedProperty.id) ? '#ffcc00' : 
+                               Number(balance) < (Number(selectedProperty.price) + 100) ? 'var(--surface-3)' : 'var(--primary)', 
+                    color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer', fontSize: '1.1rem',
+                    opacity: (Number(balance) < (Number(selectedProperty.price) + 100) || deals.some(d => d.property?.id === selectedProperty.id)) ? 0.7 : 1
+                  }}
+                >
+                  {deals.some(d => d.property?.id === selectedProperty.id) ? '⏳ Request Sent' : 
+                   Number(balance) < (Number(selectedProperty.price) + 100) ? 'Insufficient Funds' : 'Confirm Purchase'}
+                </button>
               )}
             </div>
           </div>
