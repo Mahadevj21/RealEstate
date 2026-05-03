@@ -38,10 +38,9 @@ build/
 **/.env
 tmp/
 
-# Local Postgres
-backend/learning_guide.md
+# Local Project Clutter
+.local-db/
 pgdata/
-pg.zip
-create_db.js
-package.json
-package-lock.json
+scratch/
+pgsql/
+backend/learning_guide.md
