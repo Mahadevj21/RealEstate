@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.realestate.realestate.entity.Deal;
@@ -96,15 +97,17 @@ public class AdminController {
         );
     }
 
-    // Give 100,000 to every user in the platform
+    // Give specified amount to every user in the platform
     @PutMapping("/balance/recharge-all")
-    public String rechargeAllUsers() {
+    public ResponseEntity<Map<String, String>> rechargeAllUsers(@RequestParam("amount") double amount) {
         List<User> users = userService.getAllUsers();
         for (User u : users) {
-            u.setBalance(u.getBalance() + 100000.0);
+            u.setBalance(u.getBalance() + amount);
             userService.updateUser(u.getId(), u);
         }
-        return "All users recharged with ₹100,000!";
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "All users recharged with ₹" + amount);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/analytics/stats")
