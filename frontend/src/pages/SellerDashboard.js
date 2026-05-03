@@ -10,11 +10,11 @@ export const SellerDashboard = () => {
   const [pendingDeals, setPendingDeals] = useState([]);
   const [balance, setBalance] = useState(0);
   const [formData, setFormData] = useState({ title: '', description: '', price: '', location: '', imageUrl: '', bedrooms: '', bathrooms: '', type: 'apartment' });
-  const [imagePreview, setImagePreview] = useState('');
+  const [, setImagePreview] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('properties');
   const [transactions, setTransactions] = useState([]);
   const [analyticsData, setAnalyticsData] = useState([]);
@@ -27,6 +27,7 @@ export const SellerDashboard = () => {
     loadPendingDeals();
     loadAnalytics();
     loadAllDeals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadAnalytics = async () => {

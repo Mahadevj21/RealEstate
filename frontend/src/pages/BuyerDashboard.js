@@ -51,7 +51,7 @@ export const BuyerDashboard = () => {
   const [propertyType, setPropertyType] = useState('');
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [message, setMessage] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [, setLoading] = useState(false);
   const [balance, setBalance] = useState(0);
   const [showBuyDialog, setShowBuyDialog] = useState(false);
   const [buyingProperty, setBuyingProperty] = useState(null);
@@ -65,6 +65,7 @@ export const BuyerDashboard = () => {
     loadFavorites();
     loadBalance();
     loadDeals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadDeals = async () => {

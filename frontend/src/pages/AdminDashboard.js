@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { apiService } from '../services/apiService';
-import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import '../styles/Dashboard.css';
 
 export const AdminDashboard = () => {
@@ -8,7 +8,6 @@ export const AdminDashboard = () => {
   const [properties, setProperties] = useState([]);
   const [deals, setDeals] = useState([]);
   const [balance, setBalance] = useState(0);
-  const [adminId, setAdminId] = useState(null);
   const [transactions, setTransactions] = useState([]);
   const [activeTab, setActiveTab] = useState('users');
   const [message, setMessage] = useState('');
@@ -23,6 +22,7 @@ export const AdminDashboard = () => {
     loadBalance();
     loadDeals();
     loadAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const showMessage = (msg) => {
@@ -66,7 +66,6 @@ export const AdminDashboard = () => {
     try {
       const data = await apiService.getAdminBalance();
       setBalance(data.balance);
-      setAdminId(data.id);
       if (data.id) loadTransactions(data.id);
     } catch (err) {
       console.error('Failed to load admin balance:', err);
