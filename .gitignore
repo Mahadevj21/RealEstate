@@ -39,5 +39,9 @@ build/
 tmp/
 
 # Local Postgres
+backend/learning_guide.md
 pgdata/
 pg.zip
+create_db.js
+package.json
+package-lock.json
