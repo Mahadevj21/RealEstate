@@ -1,9 +1,9 @@
 package com.realestate.realestate.component;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import com.realestate.realestate.entity.Property;
@@ -26,11 +26,15 @@ public class DataInitializer implements CommandLineRunner {
 
         System.out.println("--- 🚀 Seeding Initial Data ---");
 
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        // Seed password is "admin123" — stored as BCrypt hash
+        String hashedPassword = encoder.encode("admin123");
+
         // 1. Create Users
         User admin = new User();
         admin.setUsername("admin");
         admin.setEmail("admin@realestate.com");
-        admin.setPassword("admin123");
+        admin.setPassword(hashedPassword);
         admin.setRole(User.Role.ADMIN);
         admin.setBalance(500000.0);
         admin.setCreatedAt(LocalDateTime.now().minusMonths(3));
@@ -39,7 +43,7 @@ public class DataInitializer implements CommandLineRunner {
         User seller = new User();
         seller.setUsername("johndoe");
         seller.setEmail("seller@realestate.com");
-        seller.setPassword("admin123");
+        seller.setPassword(hashedPassword);
         seller.setRole(User.Role.SELLER);
         seller.setBalance(100000.0);
         seller.setCreatedAt(LocalDateTime.now().minusMonths(2));
@@ -48,7 +52,7 @@ public class DataInitializer implements CommandLineRunner {
         User buyer = new User();
         buyer.setUsername("janebuyer");
         buyer.setEmail("buyer@realestate.com");
-        buyer.setPassword("admin123");
+        buyer.setPassword(hashedPassword);
         buyer.setRole(User.Role.BUYER);
         buyer.setBalance(250000.0);
         buyer.setCreatedAt(LocalDateTime.now().minusMonths(2));
@@ -56,8 +60,8 @@ public class DataInitializer implements CommandLineRunner {
 
         // 2. Seed 10 Properties
         String[] titles = {
-            "Modern Sky Apartment", "Sunset Ocean Villa", "Green Valley Ranch", 
-            "Penthouse in Manhattan", "Cozy Lake Cabin", "Minimalist Studio", 
+            "Modern Sky Apartment", "Sunset Ocean Villa", "Green Valley Ranch",
+            "Penthouse in Manhattan", "Cozy Lake Cabin", "Minimalist Studio",
             "Heritage Royal Mansion", "Suburban Family Home", "Tech City Duplex", "Country Side Estate"
         };
         String[] locs = { "Mumbai", "Goa", "Pune", "Delhi", "Nanital", "Bangalore", "Rajasthan", "Chennai", "Hyderabad", "Kerala" };

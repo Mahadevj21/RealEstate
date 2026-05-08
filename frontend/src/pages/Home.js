@@ -21,18 +21,20 @@ export const Home = () => {
 
         try {
             if (isSignup) {
+                // response = { token: '...', user: { id, username, role, ... } }
                 const response = await apiService.register(formData.username, formData.email, formData.password, formData.role);
-                if (response && response.id) {
-                    login(response);
+                if (response && response.user) {
+                    login(response); // AuthContext extracts token + user
                     alert(`Signup successful! Logged in as ${formData.role.toLowerCase()}.`);
                     setFormData({ username: '', email: '', password: '', role: 'BUYER' });
                 } else {
                     setError(response?.message || 'Signup failed. Please try again.');
                 }
             } else {
+                // response = { token: '...', user: { id, username, role, ... } }
                 const response = await apiService.login(formData.email, formData.password);
-                if (response && response.id) {
-                    login(response);
+                if (response && response.user) {
+                    login(response); // AuthContext extracts token + user
                 } else {
                     setError(response?.message || response?.error || 'Login failed. Please check credentials.');
                 }

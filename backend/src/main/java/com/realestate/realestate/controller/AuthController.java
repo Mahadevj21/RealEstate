@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.realestate.realestate.dto.AuthResponse;
 import com.realestate.realestate.entity.User;
 import com.realestate.realestate.service.AuthService;
 import com.realestate.realestate.service.UserService;
@@ -22,12 +23,12 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
+    public AuthResponse register(@RequestBody User user) {
         return authService.register(user);
     }
 
     @PostMapping("/login")
-    public User login(@RequestBody User loginRequest) {
+    public AuthResponse login(@RequestBody User loginRequest) {
         return authService.login(loginRequest.getEmail(), loginRequest.getPassword());
     }
 

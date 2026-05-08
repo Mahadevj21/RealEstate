@@ -2,6 +2,7 @@ package com.realestate.realestate.service;
 
 import java.util.List;
 
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.realestate.realestate.entity.User;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
     public User saveUser(User user) {
         return userRepository.save(user);
@@ -42,8 +44,9 @@ public class UserService {
         if (updateData.getEmail() != null && !updateData.getEmail().isEmpty()) {
             user.setEmail(updateData.getEmail());
         }
+        // Hash the password before saving if a new one is supplied
         if (updateData.getPassword() != null && !updateData.getPassword().isEmpty()) {
-            user.setPassword(updateData.getPassword());
+            user.setPassword(passwordEncoder.encode(updateData.getPassword()));
         }
 
         return userRepository.save(user);
@@ -63,5 +66,8 @@ public class UserService {
 
     public User updateUser(Long id, User user) {
         return userRepository.save(user);
+    }
+    public long countAllUsers() {
+        return userRepository.count();
     }
 }

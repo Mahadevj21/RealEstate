@@ -40,4 +40,9 @@ public interface PropertyRepository extends JpaRepository<Property, Long> {
         @Param("maxPrice") double maxPrice,
         @Param("sold") boolean sold
     );
+    @Query("SELECT p FROM Property p WHERE p.approved = true AND p.sold = false " +
+           "AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(p.description) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(p.location) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    List<Property> searchApprovedProperties(@Param("keyword") String keyword);
 }

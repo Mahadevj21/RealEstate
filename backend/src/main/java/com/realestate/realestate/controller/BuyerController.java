@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,14 +36,26 @@ public class BuyerController {
     private final FavouriteRepository favouriteRepository;
     private final DealRepository dealRepository;
 
+    private Long getCurrentUserId() {
+        return (Long) SecurityContextHolder.getContext().getAuthentication().getDetails();
+    }
+
+    private void validateUser(Long userId) {
+        if (!userId.equals(getCurrentUserId())) {
+            throw new RuntimeException("Unauthorized: You cannot access data for another user");
+        }
+    }
+
     @PostMapping("/buy/{propertyId}/buyer/{buyerId}")
     public Deal buyProperty(@PathVariable Long propertyId,
                             @PathVariable Long buyerId) {
+        validateUser(buyerId);
         return dealService.createDealRequest(propertyId, buyerId);
     }
 
     @GetMapping("/{buyerId}/balance")
     public Map<String, Object> getBuyerBalance(@PathVariable Long buyerId) {
+        validateUser(buyerId);
         User buyer = userRepository.findById(buyerId)
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
         return Map.of(
@@ -54,6 +67,7 @@ public class BuyerController {
 
     @GetMapping("/{buyerId}/deals")
     public List<Deal> getBuyerDeals(@PathVariable Long buyerId) {
+        validateUser(buyerId);
         return dealService.getBuyerDeals(buyerId);
     }
 
@@ -62,6 +76,7 @@ public class BuyerController {
             @PathVariable Long buyerId,
             @PathVariable Long propertyId
     ) {
+        validateUser(buyerId);
         User buyer = userRepository.findById(buyerId)
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
 
@@ -83,6 +98,7 @@ public class BuyerController {
             @PathVariable Long buyerId,
             @PathVariable Long propertyId
     ) {
+        validateUser(buyerId);
         Favourite favourite = favouriteRepository.findByUserIdAndPropertyId(buyerId, propertyId)
                 .orElseThrow(() -> new RuntimeException("Favourite not found"));
 
@@ -92,6 +108,7 @@ public class BuyerController {
 
     @GetMapping("/{buyerId}/favourites")
     public List<Property> getFavouriteProperties(@PathVariable Long buyerId) {
+        validateUser(buyerId);
         userRepository.findById(buyerId)
                 .orElseThrow(() -> new RuntimeException("Buyer not found"));
 

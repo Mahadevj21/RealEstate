@@ -40,9 +40,12 @@ public class PropertyService {
         return propertyRepository.findByApprovedAndSold(true, false);
     }
 
-    public void deleteProperty(Long propertyId) {
-        if (!propertyRepository.existsById(propertyId)) {
-            throw new RuntimeException("Property not found");
+    public void deleteProperty(Long propertyId, Long requesterId) {
+        Property property = propertyRepository.findById(propertyId)
+                .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (!property.getSeller().getId().equals(requesterId)) {
+            throw new RuntimeException("Access Denied: You do not own this property");
         }
 
         // Delete associated deals to avoid foreign key issues
@@ -51,9 +54,13 @@ public class PropertyService {
         propertyRepository.deleteById(propertyId);
     }
 
-    public Property updateProperty(Long propertyId, Property updatedProperty) {
+    public Property updateProperty(Long propertyId, Property updatedProperty, Long requesterId) {
         Property property = propertyRepository.findById(propertyId)
                 .orElseThrow(() -> new RuntimeException("Property not found"));
+
+        if (!property.getSeller().getId().equals(requesterId)) {
+            throw new RuntimeException("Access Denied: You do not own this property");
+        }
 
         if (updatedProperty.getTitle() != null) property.setTitle(updatedProperty.getTitle());
         if (updatedProperty.getDescription() != null) property.setDescription(updatedProperty.getDescription());
@@ -90,15 +97,7 @@ public class PropertyService {
 
     // searchProperties() — keyword search on title, description, location
     public List<Property> searchProperties(String keyword) {
-        String kw = keyword.toLowerCase();
-        return propertyRepository.findAll().stream()
-                .filter(p -> p.isApproved() && !p.isSold())
-                .filter(p ->
-                    (p.getTitle() != null && p.getTitle().toLowerCase().contains(kw)) ||
-                    (p.getDescription() != null && p.getDescription().toLowerCase().contains(kw)) ||
-                    (p.getLocation() != null && p.getLocation().toLowerCase().contains(kw))
-                )
-                .collect(Collectors.toList());
+        return propertyRepository.searchApprovedProperties(keyword);
     }
 
     // filterProperties() — filter by location, price range, sold status (approved only)

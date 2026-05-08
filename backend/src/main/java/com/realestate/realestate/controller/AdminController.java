@@ -9,11 +9,11 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.realestate.realestate.entity.Deal;
@@ -33,6 +33,10 @@ public class AdminController {
     private final UserService userService;
     private final PropertyService propertyService;
     private final DealService dealService;
+
+    private Long getCurrentUserId() {
+        return (Long) SecurityContextHolder.getContext().getAuthentication().getDetails();
+    }
 
     @GetMapping("/users")
     public List<User> getAllUsers() {
@@ -81,14 +85,8 @@ public class AdminController {
 
     @GetMapping("/balance")
     public Map<String, Object> getAdminBalance() {
-        User admin = userService.getAllUsers().stream()
-                .filter(u -> u.getRole() == User.Role.ADMIN)
-                .findFirst()
-                .orElse(null);
-
-        if (admin == null) {
-            return Map.of("id", 0, "username", "No Admin", "balance", 0.0);
-        }
+        // Use token to find current admin, don't trust URL parameters
+        User admin = userService.findById(getCurrentUserId());
 
         return Map.of(
             "id", admin.getId(),
@@ -97,31 +95,16 @@ public class AdminController {
         );
     }
 
-    // Give specified amount to every user in the platform
-    @PutMapping("/balance/recharge-all")
-    public ResponseEntity<Map<String, String>> rechargeAllUsers(@RequestParam("amount") double amount) {
-        List<User> users = userService.getAllUsers();
-        for (User u : users) {
-            u.setBalance(u.getBalance() + amount);
-            userService.updateUser(u.getId(), u);
-        }
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "All users recharged with ₹" + amount);
-        return ResponseEntity.ok(response);
-    }
-
     @GetMapping("/analytics/stats")
     public Map<String, Object> getPlatformStats() {
         Map<String, Object> stats = new HashMap<>();
-        List<User> users = userService.getAllUsers();
-        List<Property> props = propertyService.getAllProperties();
-        List<Deal> deals = dealService.getCompletedDeals();
-
-        stats.put("totalUsers", (long) users.size());
-        stats.put("activeListings", props.stream().filter(p -> !p.isSold()).count());
-        stats.put("pendingApproval", props.stream().filter(p -> !p.isApproved() && !p.isSold()).count());
-        stats.put("completedDeals", (long) deals.size());
-        stats.put("totalVolume", deals.stream().mapToDouble(Deal::getAmount).sum());
+        
+        // Use optimized counts instead of fetching all lists
+        stats.put("totalUsers", userService.countAllUsers());
+        stats.put("activeListings", (long) propertyService.getApprovedProperties().size());
+        stats.put("pendingApproval", (long) propertyService.getAllProperties().stream().filter(p -> !p.isApproved() && !p.isSold()).count());
+        stats.put("completedDeals", (long) dealService.getCompletedDeals().size());
+        stats.put("totalVolume", dealService.getCompletedDeals().stream().mapToDouble(Deal::getAmount).sum());
 
         return stats;
     }

@@ -203,19 +203,6 @@ export const AdminDashboard = () => {
         <div className="users-section">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3>User Management</h3>
-            <button onClick={async () => {
-              if(!window.confirm('Recharge all users with ₹5,00,000?')) return;
-              try {
-                setLoading(true);
-                await apiService.rechargeAllUsers(500000);
-                showMessage('✓ All users recharged with ₹5,00,000');
-                loadUsers();
-                loadBalance();
-              } catch (err) { showMessage('✗ Recharge failed'); }
-              finally { setLoading(false); }
-            }} className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.85rem' }}>
-              ⚡ Global Recharge (Test)
-            </button>
           </div>
           <table className="admin-table">
             <thead>

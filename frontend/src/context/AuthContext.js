@@ -8,14 +8,27 @@ export const AuthProvider = ({ children }) => {
     return stored ? JSON.parse(stored) : null;
   });
 
-  const login = (userData) => {
+  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
+
+  const login = (authResponse) => {
+    // authResponse = { token: '...', user: { ... } }
+    const userData = authResponse.user ?? authResponse;
+    const jwt = authResponse.token ?? null;
+
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+
+    if (jwt) {
+      setToken(jwt);
+      localStorage.setItem('token', jwt);
+    }
   };
 
   const logout = () => {
     setUser(null);
+    setToken(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   };
 
   const updateUser = (updatedUserData) => {
@@ -24,7 +37,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, updateUser, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, token, login, logout, updateUser, isAuthenticated: !!user }}>
       {children}
     </AuthContext.Provider>
   );
